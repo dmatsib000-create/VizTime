@@ -60,8 +60,9 @@ export function renderRun(now = Date.now()) {
   const st = E.stage(s, now);
   const noteFor = getNote(s.title);
 
-  $('r-kind').textContent = s.kind === 'extension' ? 'Extra time' : '';
-  $('r-title').textContent = s.title || `${Math.round(s.totalMs / MIN)} minutes`;
+  // Work mode hides this text but screen readers still read it, so it names no length.
+  $('r-kind').textContent = s.kind === 'extension' && mode !== 'work' ? 'Extra time' : '';
+  $('r-title').textContent = s.title || (mode === 'work' ? 'Current' : `${Math.round(s.totalMs / MIN)} minutes`);
   $('r-next-line').hidden = !s.next;
   $('r-next').textContent = s.next;
   showRibbon('r-ribbon', 'r-ribbon-text', s.title);
