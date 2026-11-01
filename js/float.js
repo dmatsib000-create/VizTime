@@ -31,6 +31,10 @@ export async function openFloatWindow(width, height, onClose) {
 }
 
 // Streams `canvas` into a hidden video and asks for picture-in-picture.
+// Safari's own presentation mode goes first: on iPhone the standard request is
+// refused once play() has been awaited, because it no longer counts the tap,
+// and asking before play() is refused because the video isn't ready. Tested
+// on iOS 27 with check/ (docs/device-tests.md, test 7).
 export async function openFloatVideo(canvas, onClose) {
   const video = document.createElement('video');
   video.muted = true;
@@ -39,16 +43,32 @@ export async function openFloatVideo(canvas, onClose) {
   video.className = 'pip-video';
   video.srcObject = canvas.captureStream(4);
   document.body.append(video);
-  await video.play();
   const cleanup = () => { video.srcObject = null; video.remove(); onClose(); };
-  if (document.pictureInPictureEnabled && video.requestPictureInPicture) {
-    video.addEventListener('leavepictureinpicture', cleanup, { once: true });
-    await video.requestPictureInPicture();
-  } else {
-    video.addEventListener('webkitpresentationmodechanged', () => {
-      if (video.webkitPresentationMode !== 'picture-in-picture') cleanup();
-    });
-    video.webkitSetPresentationMode('picture-in-picture');
+  try {
+    await video.play();
+    if (typeof video.webkitSetPresentationMode === 'function') {
+      // A refusal here is silent, so wait briefly for the mode to change.
+      await new Promise((resolve, reject) => {
+        const giveUp = setTimeout(() => reject(new Error('picture-in-picture did not open')), 1500);
+        video.addEventListener('webkitpresentationmodechanged', () => {
+          clearTimeout(giveUp);
+          if (video.webkitPresentationMode === 'picture-in-picture') resolve();
+          else reject(new Error('picture-in-picture did not open'));
+        }, { once: true });
+        video.webkitSetPresentationMode('picture-in-picture');
+      });
+      video.addEventListener('webkitpresentationmodechanged', () => {
+        if (video.webkitPresentationMode !== 'picture-in-picture') cleanup();
+      });
+    } else {
+      video.addEventListener('leavepictureinpicture', cleanup, { once: true });
+      await video.requestPictureInPicture();
+    }
+  } catch (e) {
+    // Don't leave a hidden video streaming after a refusal.
+    video.srcObject = null;
+    video.remove();
+    throw e;
   }
   return () => {
     if (document.pictureInPictureElement === video) document.exitPictureInPicture();
