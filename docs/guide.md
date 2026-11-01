@@ -152,7 +152,7 @@ In Work mode, VizTime never speaks or sends notices about anything except "Sessi
 
 On a computer, tap **Float** to open a small window that stays on top of everything else. It shows the picture and a few buttons, and at the end it offers the same "what's next" choices. This works in Chrome, Edge and Vivaldi on a computer.
 
-On an iPhone, **Float** shows the picture as a small floating video over other apps. You can't tap it, and the iPhone may freeze it while you're in another app. Treat it as an experiment.
+On an iPhone, **Float** works only when VizTime is open in Safari, not from the Home Screen, because Apple doesn't support it in home-screen apps yet. In Safari it shows the picture as a small floating video over other apps. You can't tap it, and the iPhone may freeze it while you're in another app. Treat it as an experiment.
 
 ## What works where
 
@@ -164,7 +164,7 @@ On an iPhone, **Float** shows the picture as a small floating video over other a
 | Keeping the screen awake | Yes (on by default during a session) | Yes |
 | Reminders when you're in another app | No | Yes, if you turn on **System notification** in Menu |
 | Vibration | No | No |
-| Floating window | Experimental, can't be tapped | Yes |
+| Floating window | No (only in a Safari tab, experimental, can't be tapped) | Yes |
 
 **Why the iPhone can do less:** an iPhone pauses web apps as soon as they're off screen or the phone locks, so VizTime can't play a sound then. That's an Apple rule that VizTime can't get around. The best approach on an iPhone is to leave VizTime open on screen; the screen stays awake by default while a session runs. Because of this, the picture and the warming light are designed to do the whole job without sound.
 

@@ -7,7 +7,15 @@
 
 export const canFloatWindow = () => 'documentPictureInPicture' in window;
 
+// An iPhone home-screen app refuses picture-in-picture although it reports it
+// as available; a Safari tab allows it (WebKit bug 303885, device test 7).
+// The display-mode half also covers a Mac Safari web app, which is untested.
+export const inIosHomeScreenApp = () => navigator.standalone === true
+  || (matchMedia('(display-mode: standalone)').matches
+    && typeof HTMLVideoElement.prototype.webkitSetPresentationMode === 'function');
+
 export function canFloatVideo() {
+  if (inIosHomeScreenApp()) return false;
   const v = document.createElement('video');
   return !!(document.pictureInPictureEnabled || typeof v.webkitSetPresentationMode === 'function')
     && typeof HTMLCanvasElement.prototype.captureStream === 'function';

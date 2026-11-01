@@ -400,13 +400,13 @@ $('n-allow').onclick = () => attempt('allow notifications', () => {
   return Notification.requestPermission();
 });
 
-// The same title and options as Work mode's finish in js/session.js.
+// The same title and options as Work mode's finish in js/session.js: no body.
 $('n-later').onclick = () => {
   note('notification in 20 s: switch to another app or window now');
   later(20_000, ms => attempt(`notification${lateBy(ms)}, page ${vis()}`, async () => {
     if (!('Notification' in window)) throw new Error('no notifications here');
     if (Notification.permission !== 'granted') throw new Error(`permission is ${Notification.permission}`);
-    const opts = { body: 'Next: Notes', tag: 'viztime-check', icon: new URL('../icons/icon-192.png', location).href, silent: true };
+    const opts = { tag: 'viztime-check', icon: new URL('../icons/icon-192.png', location).href, silent: true };
     const reg = await navigator.serviceWorker?.getRegistration();
     if (reg) { await reg.showNotification('Session finished.', opts); return 'shown by the service worker'; }
     new Notification('Session finished.', opts);
