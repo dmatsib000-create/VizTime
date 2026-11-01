@@ -124,6 +124,9 @@ function readForm() {
   };
 }
 
+// An untitled preset is named by its length, except in Work mode, which never shows one.
+const presetName = p => p.title || (mode === 'work' ? 'Session' : `${p.minutes} minutes`);
+
 function renderPresets() {
   const list = $('preset-list');
   list.replaceChildren(...presets.map(p => {
@@ -133,7 +136,7 @@ function renderPresets() {
     start.className = 'preset-start';
     const name = document.createElement('span');
     name.className = 'preset-name';
-    name.textContent = p.title || `${p.minutes} minutes`;
+    name.textContent = presetName(p);
     if (p.next) {
       const em = document.createElement('em');
       em.textContent = `, then ${p.next}`;
@@ -151,7 +154,7 @@ function renderPresets() {
     del.type = 'button';
     del.className = 'preset-del';
     del.textContent = '×';
-    del.setAttribute('aria-label', `Remove preset ${p.title || p.minutes + ' minutes'}`);
+    del.setAttribute('aria-label', `Remove preset ${presetName(p)}`);
     del.addEventListener('click', () => {
       const removed = presets.indexOf(p);
       presets = presets.filter(x => x !== p);
