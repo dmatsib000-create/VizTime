@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="VizTime check">
+<title>VizTime check</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<!-- Not part of the app: a page for the device tests in docs/device-tests.md.
+     It tries each platform feature VizTime relies on, the way the app does,
+     and writes what happened to a log that survives a reload. -->
+<style>
+  :root {
+    --paper: #EFEAE0; --raised: #F6F2EA; --rule: #D6CFC1; --ink: #2B2A26; --soft: #5A564E;
+    --mono: ui-monospace, Menlo, Consolas, monospace;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --paper: #1E1C19; --raised: #26231F; --rule: #3A362F; --ink: #E6DFD2; --soft: #A39C8E; }
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0 auto;
+    max-width: 720px;
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+             max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    background: var(--paper);
+    color: var(--ink);
+    font: 400 16px/1.5 Georgia, 'Times New Roman', serif;
+  }
+  h1 { font-weight: 400; font-size: 26px; margin: 0 0 4px; }
+  h2 { font: 500 12px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--soft); margin: 24px 0 8px; }
+  p { margin: 0 0 8px; color: var(--soft); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  button {
+    min-height: 44px; padding: 0 14px;
+    font: inherit; font-size: 15px; color: var(--ink);
+    background: var(--raised); border: 1px solid var(--rule); border-radius: 2px;
+  }
+  button:active { background: var(--rule); }
+  #stats { font: 400 13px/1.5 var(--mono); color: var(--ink); }
+  #log {
+    font: 400 12px/1.5 var(--mono);
+    background: var(--raised); border: 1px solid var(--rule); border-radius: 2px;
+    padding: 12px; margin: 0;
+    white-space: pre-wrap; overflow-wrap: anywhere;
+    max-height: 60vh; overflow: auto;
+  }
+  .hidden-video { position: fixed; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  canvas { display: none; }
+</style>
+</head>
+<body>
+
+<h1>VizTime check</h1>
+<p>Each button tries one thing VizTime relies on and writes what happened below. The log is kept if the page reloads. Steps are in docs/device-tests.md.</p>
+<p id="stats"></p>
+
+<h2>Floating view</h2>
+<div class="row">
+  <button type="button" id="doc-float">Floating window</button>
+  <button type="button" id="vid-wait">Video float, as the app does it</button>
+  <button type="button" id="vid-now">Video float, asking at once</button>
+  <button type="button" id="vid-webkit">Video float, Safari's way</button>
+  <button type="button" id="vid-close">Close video float</button>
+</div>
+
+<h2>Sound</h2>
+<div class="row">
+  <button type="button" id="snd-start">Start sound</button>
+  <button type="button" id="snd-later">Tone in 60 s, no tap</button>
+  <button type="button" id="snd-resume">Resume sound</button>
+</div>
+
+<h2>Speech</h2>
+<div class="row">
+  <button type="button" id="sp-now">Speak now</button>
+  <button type="button" id="sp-later">Speak in 10 s, no tap</button>
+  <button type="button" id="sp-prime">Prime speech silently</button>
+</div>
+
+<h2>Screen and notifications</h2>
+<div class="row">
+  <button type="button" id="wake-on">Hold screen awake</button>
+  <button type="button" id="wake-off">Let screen sleep</button>
+  <button type="button" id="n-allow">Allow notifications</button>
+  <button type="button" id="n-later">Notification in 20 s</button>
+</div>
+
+<h2>Other</h2>
+<div class="row">
+  <button type="button" id="persist">Ask to keep data</button>
+  <button type="button" id="vibrate">Vibrate</button>
+  <button type="button" id="facts">List this device again</button>
+</div>
+
+<h2>Log</h2>
+<div class="row" style="margin-bottom: 8px">
+  <button type="button" id="copy">Copy log</button>
+  <button type="button" id="clear">Clear log</button>
+</div>
+<pre id="log" aria-live="off"></pre>
+
+<canvas id="canvas" width="360" height="360"></canvas>
+
+<script type="module">
+import { load, save } from '../js/store.js';
+
+const $ = id => document.getElementById(id);
+const KEY = 'check-log';
+const vis = () => document.visibilityState;
+const secs = ms => `${(ms / 1000).toFixed(1)} s`;
+const clock = ms => new Date(ms).toLocaleTimeString([], { hour12: false });
+
+/* ---------- Log ---------- */
+
+let entries = load(KEY, []);
+
+function note(msg) {
+  entries.push([Date.now(), msg]);
+  if (entries.length > 500) entries = entries.slice(-500);
+  save(KEY, entries);
+  $('log').textContent = entries.map(([t, m]) => `${clock(t)}  ${m}`).join('\n');
+  $('log').scrollTop = $('log').scrollHeight;
+}
+
+// Runs one try and logs its result or the error's name.
+async function attempt(label, fn) {
+  try {
+    const r = await fn();
+    note(`${label}: ${r ?? 'ok'}`);
+  } catch (e) {
+    note(`${label}: failed, ${e?.name || 'Error'}${e?.message ? ` (${e.message})` : ''}`);
+  }
+}
+
+function facts() {
+  const v = document.createElement('video');
+  const probe = typeof v.webkitSupportsPresentationMode === 'function'
+    ? v.webkitSupportsPresentationMode('picture-in-picture') : 'no such method';
+  note(`browser: ${navigator.userAgent}`);
+  note(`installed (display-mode standalone): ${matchMedia('(display-mode: standalone)').matches}`);
+  note(`navigator.standalone: ${navigator.standalone}`);
+  note(`document.pictureInPictureEnabled: ${document.pictureInPictureEnabled}`);
+  note(`webkitSupportsPresentationMode, empty video: ${probe}`);
+  note(`floating window (Document PiP): ${'documentPictureInPicture' in window}`);
+  note(`canvas captureStream: ${typeof HTMLCanvasElement.prototype.captureStream === 'function'}`);
+  note(`wake lock: ${'wakeLock' in navigator}`);
+  note(`Notification: ${'Notification' in window ? Notification.permission : 'absent'}`);
+  note(`vibrate: ${'vibrate' in navigator}`);
+  note(`audioSession: ${navigator.audioSession ? navigator.audioSession.type : 'absent'}`);
+  note(`speechSynthesis: ${'speechSynthesis' in window}`);
+  if ('wasDiscarded' in document) note(`page was discarded before this load: ${document.wasDiscarded}`);
+  navigator.storage?.persisted?.().then(p => note(`storage kept for good: ${p}`));
+  navigator.storage?.estimate?.().then(e => note(`storage: ${Math.round(e.usage / 1024)} KB used of ${Math.round(e.quota / 1048576)} MB`));
+}
+
+/* ---------- Ticks ---------- */
+
+// Like the app, one tick a second from a timer. Gaps show how the browser
+// throttles or freezes the page. Waits are timestamps checked here, so they
+// behave like VizTime's cues: they come due even if the page slept.
+let last = Date.now(), ticks = 0, late = 0, over65 = 0, longest = 0;
+const due = [];
+
+setInterval(() => {
+  const now = Date.now(), gap = now - last;
+  last = now;
+  ticks++;
+  if (gap > 1500) {
+    late++;
+    if (gap > 65_000) over65++;
+    longest = Math.max(longest, gap);
+    note(`main window tick gap ${secs(gap)}, page ${vis()} at this tick`);
+  }
+  for (let i = due.length - 1; i >= 0; i--) {
+    if (due[i].at > now) continue;
+    const [{ run, at }] = due.splice(i, 1);
+    run(now - at);
+  }
+  $('stats').textContent = `Main window: ${ticks} ticks, ${late} late, ${over65} over 65 s, longest ${secs(longest)}.`
+    + (fw ? ` Floating window: ${fwTicks} ticks, ${fwLate} late, longest ${secs(fwLongest)}.` : '');
+}, 1000);
+
+const later = (ms, run) => due.push({ at: Date.now() + ms, run });
+const lateBy = ms => ms > 1500 ? `, ${secs(ms)} late` : '';
+
+document.addEventListener('visibilitychange', () => {
+  note(`page ${vis()}${ctx ? `, sound ${ctx.state}` : ''}`);
+  if (wantLock && vis() === 'visible') attempt('hold screen awake again', () => takeLock(navigator, 'main window'));
+});
+addEventListener('pagehide', e => note(`page closing${e.persisted ? ' (kept in memory)' : ''}`));
+addEventListener('pageshow', e => { if (e.persisted) note('page restored from memory'); });
+document.addEventListener('freeze', () => note('page frozen'));
+document.addEventListener('resume', () => note('page unfrozen'));
+
+/* ---------- Floating window ---------- */
+
+// Asks for 200 × 200, the size the docs mention, and logs what it got. Its own
+// animation frames tick once a second, as js/pip.js does.
+let fw = null, fwLast = 0, fwTicks = 0, fwLate = 0, fwLongest = 0;
+
+function fwFrame() {
+  if (!fw) return;
+  fw.requestAnimationFrame(fwFrame);
+  const now = Date.now();
+  if (now - fwLast < 1000) return;
+  const gap = now - fwLast;
+  fwLast = now;
+  fwTicks++;
+  if (gap > 1500) {
+    fwLate++;
+    fwLongest = Math.max(fwLongest, gap);
+    note(`floating window tick gap ${secs(gap)}, main page ${vis()}`);
+  }
+  fw.document.getElementById('t').textContent = `${clock(now)} · ${fwTicks} ticks, ${fwLate} late`;
+}
+
+$('doc-float').onclick = () => attempt('floating window', async () => {
+  if (fw) { fw.close(); return 'closing'; }
+  if (!('documentPictureInPicture' in window)) throw new Error('not in this browser');
+  fw = await documentPictureInPicture.requestWindow({ width: 200, height: 200 });
+  const d = fw.document;
+  d.body.style.cssText = 'margin:0;padding:8px;font:14px/1.4 Georgia,serif;background:#EFEAE0;color:#2B2A26';
+  d.body.innerHTML = '<p id="t" style="margin:0 0 8px"></p><button id="w" type="button" style="min-height:36px">Hold screen awake from here</button>';
+  d.getElementById('w').onclick = () => attempt('hold screen awake from floating window', () => takeLock(fw.navigator, 'floating window'));
+  let settle;
+  fw.addEventListener('resize', () => {
+    clearTimeout(settle);
+    settle = setTimeout(() => fw && note(`floating window resized to ${fw.innerWidth} × ${fw.innerHeight} inside`), 400);
+  });
+  fw.addEventListener('pagehide', () => { note('floating window closed'); fw = null; }, { once: true });
+  fwLast = Date.now(); fwTicks = fwLate = fwLongest = 0;
+  fw.requestAnimationFrame(fwFrame);
+  return `open, ${fw.innerWidth} × ${fw.innerHeight} inside (asked for 200 × 200)`;
+});
+
+/* ---------- Video float ---------- */
+
+// A moving second hand and the time, so a frozen float is easy to see.
+let video = null, painter = null;
+
+function paint() {
+  const c = $('canvas'), g = c.getContext('2d'), W = c.width, cx = W / 2, cy = 160;
+  const now = new Date();
+  const a = (now.getSeconds() + now.getMilliseconds() / 1000) / 60 * 2 * Math.PI;
+  g.fillStyle = '#EFEAE0';
+  g.fillRect(0, 0, W, c.height);
+  g.strokeStyle = g.fillStyle = '#2B2A26';
+  g.lineWidth = 6;
+  g.beginPath(); g.arc(cx, cy, 120, 0, 2 * Math.PI); g.stroke();
+  g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + 105 * Math.sin(a), cy - 105 * Math.cos(a)); g.stroke();
+  g.font = '30px Georgia, serif';
+  g.textAlign = 'center';
+  g.fillText(clock(now), cx, 330);
+}
+
+function closeVideo() {
+  const v = video;
+  if (!v) return;
+  video = null;
+  if (document.pictureInPictureElement === v) document.exitPictureInPicture().catch(() => {});
+  v.srcObject = null;
+  v.remove();
+  clearInterval(painter);
+  painter = null;
+}
+
+// how: 'wait' plays first, as js/float.js does; 'now' asks within the tap;
+// 'webkit' uses Safari's own presentation mode.
+async function videoFloat(how) {
+  closeVideo();
+  paint();
+  painter = setInterval(paint, 500);
+  const v = video = document.createElement('video');
+  v.muted = true;
+  v.playsInline = true;
+  v.setAttribute('playsinline', '');
+  v.className = 'hidden-video';
+  v.srcObject = $('canvas').captureStream(4);
+  document.body.append(v);
+  try {
+    if (how === 'now') v.play().catch(() => {}); else await v.play();
+    if (typeof v.webkitSupportsPresentationMode === 'function') {
+      note(`webkitSupportsPresentationMode, playing video: ${v.webkitSupportsPresentationMode('picture-in-picture')}`);
+    }
+    if (how === 'webkit') {
+      if (typeof v.webkitSetPresentationMode !== 'function') throw new Error('not in this browser');
+      v.addEventListener('webkitpresentationmodechanged', () => {
+        note(`video float mode is now ${v.webkitPresentationMode}`);
+        if (v.webkitPresentationMode === 'inline') closeVideo();
+      });
+      v.webkitSetPresentationMode('picture-in-picture');
+      return 'asked; a "mode is now" line follows if it opened';
+    }
+    v.addEventListener('leavepictureinpicture', () => { note('video float closed'); closeVideo(); }, { once: true });
+    const win = await v.requestPictureInPicture();
+    return `open, ${win.width} × ${win.height}`;
+  } catch (e) {
+    closeVideo();
+    throw e;
+  }
+}
+
+$('vid-wait').onclick = () => attempt('video float, as the app does it', () => videoFloat('wait'));
+$('vid-now').onclick = () => attempt('video float, asking at once', () => videoFloat('now'));
+$('vid-webkit').onclick = () => attempt("video float, Safari's way", () => videoFloat('webkit'));
+$('vid-close').onclick = () => { closeVideo(); note('video float closed by button'); };
+
+/* ---------- Sound ---------- */
+
+let ctx = null;
+
+function tone() {
+  const t = ctx.currentTime, osc = ctx.createOscillator(), gain = ctx.createGain();
+  osc.frequency.value = 523.25;
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.linearRampToValueAtTime(0.22, t + 0.3);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.8);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + 2);
+}
+
+// resume() is never awaited: on iOS 26 it can hang. Its result is logged.
+function resume(label) {
+  const before = ctx.state;
+  if (before !== 'running') ctx.resume().then(() => note(`${label}: resume finished, sound ${ctx.state}`));
+  return before;
+}
+
+function startSound() {
+  if (!ctx) {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    ctx.onstatechange = () => note(`sound is now ${ctx.state}`);
+  }
+  const before = resume('tap');
+  tone();
+  return `sound was ${before}; a tone should play`;
+}
+
+$('snd-start').onclick = () => attempt('start sound (tap)', startSound);
+$('snd-resume').onclick = () => attempt('resume sound (tap)', startSound);
+$('snd-later').onclick = () => {
+  if (!ctx) return note('tone in 60 s: start sound first');
+  note('tone in 60 s: waiting');
+  later(60_000, ms => {
+    const before = resume('timer');
+    tone();
+    note(`tone from timer, no tap${lateBy(ms)}: sound was ${before}, page ${vis()}; did you hear it?`);
+    setTimeout(() => ctx && note(`one second after the timer tone, sound is ${ctx.state}`), 1000);
+  });
+};
+
+/* ---------- Speech ---------- */
+
+function say(text, label, volume = 1) {
+  if (!('speechSynthesis' in window)) return note(`${label}: no speech in this browser`);
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.95;
+  u.volume = volume;
+  u.onstart = () => note(`${label}: started speaking`);
+  u.onend = () => note(`${label}: finished speaking`);
+  u.onerror = e => note(`${label}: speech error, ${e.error}`);
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+  note(`${label}: asked to speak`);
+}
+
+$('sp-now').onclick = () => say('Session finished.', 'speak (tap)');
+$('sp-prime').onclick = () => say('ready', 'prime speech (tap)', 0);
+$('sp-later').onclick = () => {
+  note('speak in 10 s: waiting');
+  later(10_000, ms => say('Session finished.', `speak from timer, no tap${lateBy(ms)}, page ${vis()}`));
+};
+
+/* ---------- Screen wake lock ---------- */
+
+let wantLock = false, lock = null;
+
+async function takeLock(nav, where) {
+  if (!('wakeLock' in nav)) throw new Error('no wake lock here');
+  const l = await nav.wakeLock.request('screen');
+  l.addEventListener('release', () => note(`screen lock from ${where} released, page ${vis()}`));
+  if (where === 'main window') lock = l;
+  return 'held';
+}
+
+$('wake-on').onclick = () => { wantLock = true; attempt('hold screen awake', () => takeLock(navigator, 'main window')); };
+$('wake-off').onclick = () => { wantLock = false; lock?.release(); lock = null; note('let screen sleep'); };
+
+/* ---------- Notifications ---------- */
+
+$('n-allow').onclick = () => attempt('allow notifications', () => {
+  if (!('Notification' in window)) throw new Error('no notifications here');
+  return Notification.requestPermission();
+});
+
+// The same title and options as Work mode's finish in js/session.js.
+$('n-later').onclick = () => {
+  note('notification in 20 s: switch to another app or window now');
+  later(20_000, ms => attempt(`notification${lateBy(ms)}, page ${vis()}`, async () => {
+    if (!('Notification' in window)) throw new Error('no notifications here');
+    if (Notification.permission !== 'granted') throw new Error(`permission is ${Notification.permission}`);
+    const opts = { body: 'Next: Notes', tag: 'viztime-check', icon: new URL('../icons/icon-192.png', location).href, silent: true };
+    const reg = await navigator.serviceWorker?.getRegistration();
+    if (reg) { await reg.showNotification('Session finished.', opts); return 'shown by the service worker'; }
+    new Notification('Session finished.', opts);
+    return 'shown by the page';
+  }));
+};
+
+/* ---------- Other ---------- */
+
+$('persist').onclick = () => attempt('ask to keep data', async () => {
+  if (!navigator.storage?.persist) throw new Error('not in this browser');
+  return `granted: ${await navigator.storage.persist()}`;
+});
+$('vibrate').onclick = () => attempt('vibrate', () => {
+  if (!('vibrate' in navigator)) throw new Error('not in this browser');
+  return `accepted: ${navigator.vibrate(300)}`;
+});
+$('facts').onclick = facts;
+
+$('copy').onclick = () => attempt('copy log', async () => {
+  await navigator.clipboard.writeText($('log').textContent);
+  return 'copied';
+});
+$('clear').onclick = () => { entries = []; note('log cleared'); };
+
+/* ---------- Start ---------- */
+
+// The same service worker as the app, so notifications take the same path.
+navigator.serviceWorker?.register('../sw.js').catch(() => {});
+note('--- page loaded ---');
+facts();
+</script>
+</body>
+</html>
