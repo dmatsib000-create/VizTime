@@ -73,4 +73,6 @@ node --test
 
 They also run on every pull request. When adding a file the app needs offline, list it in `SHELL` in `sw.js` and bump `CACHE`; the tests fail if a script or font is missing from the list.
 
+What the platforms allow (floating windows, sound after locking, keeping the screen awake) can only be checked on the devices themselves. [docs/device-tests.md](docs/device-tests.md) lists those tests; they use `check/`, a page that isn't part of the app.
+
 Fonts: Newsreader and IBM Plex Mono, SIL Open Font License, stored in `fonts/`.
