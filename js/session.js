@@ -129,7 +129,6 @@ async function notify(cue) {
   if (mode === 'work') {
     if (cue !== 'finish') return;
     title = 'Session finished.';
-    text = s.next ? `Next: ${s.next}` : '';
   } else if (cue === 'warn') {
     title = `${fmtLeft(E.remaining(s))} left${s.title ? ` · ${s.title}` : ''}`;
     text = s.next ? `Then ${s.next}` : '';
