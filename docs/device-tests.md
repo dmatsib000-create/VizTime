@@ -55,13 +55,13 @@ Repeat with Silent mode on. Then repeat once more, but after unlocking tap **Res
 
 | # | Date | Device and version | Result |
 |---|---|---|---|
-| 1 | | | |
-| 2 | | | |
+| 1 | 2026-11-01 | Windows 11, Chrome 156 | Partly done. With the floating window open, the main page stayed at one tick a second for 11 minutes hidden: no late ticks in the main page or the floating window. So Float keeps cues on time. The page was hidden by switching tabs, not by minimising. Asking for 200 × 200 gave 244 × 202 inside, and the height switched between 202 and 146 whenever the main tab was shown or hidden. Screen-awake, the covered-window run and Edge not tried yet. |
+| 2 | 2026-11-01 | Windows 11, Chrome 156 | Partly done. Without Float, ticks dropped to once a minute about a minute after hiding (not five) and stayed at exactly 60.0 s for 11 minutes. None over 65 s, so no cue would have been skipped, but the margin is 5 s. Edge not tried yet. |
 | 3 | | | |
 | 4 | | | |
 | 5 | | | |
 | 6 | | | |
-| 7 | | | |
-| 8 | | | |
+| 7 | 2026-11-01 | iPhone, iOS 27.0.1, Chrome for iOS 152 (a browser tab) | Partly done. "As the app does it" failed twice (NotAllowedError: not triggered by a user activation). "Asking at once" failed three times (InvalidStateError: not ready). "Safari's way" opened 5 out of 5 times, and closing worked. `webkitSupportsPresentationMode` is false on an empty video but true on a playing one, so it can't be used to decide whether to show Float. VizTime now uses Safari's way first. Safari itself, the Home Screen, and whether the picture keeps moving in another app not tried yet. |
+| 8 | 2026-11-01 | iPhone, iOS 27.0.1, Chrome for iOS 152 | Started only. A tap moved sound from suspended to running. Lock-and-return not tried yet. |
 | 9 | | | |
 | 10 | | | |
