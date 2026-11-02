@@ -304,6 +304,12 @@ body[data-mode="simple"] .not-simple { display: none; }
 
 .face-wrap { position: relative; display: flex; justify-content: center; margin: var(--s3) auto; }
 .face { width: min(80vw, 46dvh, 400px); aspect-ratio: 1; display: block; }
+/* The ruler is read by its length, so it takes the whole column. It keeps the square's
+   height, so the dots under it don't move when the picture changes. A phone on its
+   side keeps the square, beside the words. */
+@media not all and (orientation: landscape) and (max-height: 520px) {
+  .face[data-picture="ruler"] { width: 100%; height: min(80vw, 46dvh, 400px); aspect-ratio: auto; }
+}
 .reveal {
   position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%);
   margin: 0; font-size: 13px; color: var(--ink-soft); white-space: nowrap;

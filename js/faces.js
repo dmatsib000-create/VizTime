@@ -253,12 +253,13 @@ function drawSun(ctx, cx, cy, R, m, p) {
 function drawRuler(ctx, w, h, m, p) {
   // The floating window; a 320px phone's face (about 256px) still has room for clock times.
   const small = w < 220;
-  const labelSize = small ? 0 : Math.min(13, Math.max(11, w / 34));
-  const pad = small ? 10 : Math.round(Math.min(36, Math.max(18, w * 0.08)));
+  // On the page the strip runs to the column's edges, leaving room only for the now dot.
+  const pad = small ? 10 : 4;
   const x0 = pad, x1 = w - pad, L = x1 - x0;
-  // About an eighth of the width: wide enough to read from the corner of the
-  // eye, thin enough to stay a line on the page rather than a block.
-  const H = Math.round(Math.min(h * 0.3, Math.max(small ? 16 : 22, w * 0.12)));
+  const labelSize = small ? 0 : L >= 300 ? 13 : 11;
+  // A sixth of its length, so it has the weight to be seen from the corner of
+  // the eye; capped so a wide desktop strip stays a strip, not a block.
+  const H = Math.round(Math.min(h * 0.28, 96, Math.max(small ? 16 : 22, L / 6)));
   const above = small ? 9 : labelSize + 13, below = small ? 12 : 16;
   const y0 = Math.round((h - (above + H + below)) / 2 + above) + 0.5, y1 = y0 + H;
 

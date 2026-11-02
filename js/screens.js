@@ -96,6 +96,8 @@ export function renderRun(now = Date.now()) {
   $('faces-switch').setAttribute('aria-label', mode === 'work' ? 'Clock style' : 'Picture');
 
   const face = $('face');
+  // The stylesheet shapes the canvas to the picture: the ruler is wider than it is tall.
+  face.dataset.picture = faceName();
   face.setAttribute('aria-label', faceLabel(now));
   if (mode === 'work') { face.setAttribute('role', 'button'); face.tabIndex = 0; }
   else { face.setAttribute('role', 'img'); face.removeAttribute('tabindex'); }
