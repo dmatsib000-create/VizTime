@@ -29,7 +29,7 @@ The browser preview is set up in [.claude/launch.json](.claude/launch.json) unde
 node --test
 ```
 
-Tests cover the timer model ([js/engine.js](js/engine.js)), what the app says about time ([js/words.js](js/words.js), including Work mode's rule), saved data ([js/store.js](js/store.js)) and the offline file list ([sw.js](sw.js)). Everything else is checked by running the app. Any new wording about time belongs in words.js, with a test, not in a page script. CI runs the tests on every push and pull request. Work on a branch and open a pull request into `main`.
+Tests cover the timer model ([js/engine.js](js/engine.js)), what the app says about time ([js/words.js](js/words.js), including Work mode's rule), the faces' clock marks and redraw rate ([js/faces.js](js/faces.js)), saved data ([js/store.js](js/store.js)) and the offline file list ([sw.js](sw.js)). Everything else is checked by running the app. Any new wording about time belongs in words.js, with a test, not in a page script. CI runs the tests on every push and pull request. Work on a branch and open a pull request into `main`.
 
 ## Rules that are easy to break
 

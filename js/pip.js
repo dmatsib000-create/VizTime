@@ -5,7 +5,7 @@ import * as E from './engine.js';
 import { mode, session } from './state.js';
 import { $, fmtClock, fmtLeft, toast } from './ui.js';
 import { faceLabel } from './screens.js';
-import { tick, lastTick, step, paint, paintVideo, faceModel, faceName } from './draw.js';
+import { tick, lastTick, step, paint, paintVideo, faceModel, faceName, frameGap, paintRequests } from './draw.js';
 import { canFloatWindow, canFloatVideo, openFloatWindow, openFloatVideo } from './float.js';
 
 export let floatDoc = null;
@@ -14,11 +14,12 @@ let floatWin = null, closeVideo = null, videoTimer = null;
 // The floating window draws on its own animation frames. The main tab's frames
 // stop whenever that tab is in the background, which is exactly when the
 // floating window is in use; relying on them left a stale, stretched picture.
-let lastFloatFrame = 0;
+let lastFloatFrame = 0, seenRequests = 0;
 function floatFrame(t) {
   if (!floatWin) return;
   floatWin.requestAnimationFrame(floatFrame);
-  if (t - lastFloatFrame < 80) return;
+  if (paintRequests === seenRequests && t - lastFloatFrame < frameGap(Date.now())) return;
+  seenRequests = paintRequests;
   lastFloatFrame = t;
   step();
   paintFloat();
