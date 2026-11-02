@@ -23,7 +23,7 @@ No build step and no framework: components are plain HTML elements with CSS clas
 |---|---|---|---|
 | `--paper` | `#EFEAE0` | `#1E1C19` | Page, sheet |
 | `--paper-raised` | `#F6F2EA` | `#26231F` | Box inputs, big chips, next card, hover and pressed fills |
-| `--rule` | `#D6CFC1` | `#3A362F` | Decorative dividers |
+| `--rule` | `#D6CFC1` | `#3A362F` | Decorative dividers (never the outline that shows a whole; that is `--rule-strong`) |
 | `--rule-strong` | `#8A8275` | `#7A7366` | Control and field borders (3:1) |
 | `--ink` | `#2B2A26` | `#E6DFD2` | Text, section rules, primary fill, pressed state |
 | `--ink-soft` | `#5A564E` | `#A39C8E` | Labels, hints, secondary text, rest-state text buttons |
@@ -43,6 +43,7 @@ Contrast (WCAG 2.1):
 | `--ochre-ink` on paper / raised | 5.69 / 6.11 | 7.92 / 7.29 | 4.5 (text), 3 (focus) |
 | `--rule-strong` on paper (control borders) | 3.17 | 3.62 | 3 |
 | `--paper` on `--ink` (primary button, toast) | 11.98 | 12.83 | 4.5 |
+| `--ink-soft` on the next card at full fill (22% ochre over raised) | 5.35 | 3.89, so the card's small text uses `--ink` in dark (8.00) | 4.5 |
 | Placeholder (`--ink-soft` at 75%) | 3.51 | 4.10 | No input uses one yet; check before relying on it |
 
 The light overlay multiplies foreground and background together, so contrast holds under full warmth (on Strong, light mode's tightest pair is `--rule-strong` at 3.06).
@@ -68,7 +69,8 @@ Weights: 400 everywhere; 500 only for the selected chip and `<strong>` in figure
 `--s1` 4 · `--s2` 8 · `--s3` 12 · `--s4` 16 · `--s5` 24 · `--s6` 32 · `--s7` 48 · `--s8` 64
 
 - Field to field: `--s5`. Label to field: `--s1`. Section break: `--s6` or `--s7` above a `1px var(--ink)` rule with `--s3` under it.
-- Content width `--measure` 640px (Work mode on ≥820px: 1040px; landscape phone: 900px).
+- Content width `--measure` 640px (Work mode on ≥820px: 1040px; landscape phone: 900px). The top bar is the same width in every mode, as wide as the widest one (1040px on ≥820px, 900px on a narrower landscape phone), so the mode switch, Float and Menu stay in the same place when the mode changes.
+- No `scrollbar-gutter`: reserved scrollbar space can't be covered by the light overlay (even `100vw` stops short of it), and an untinted strip at the edge during warmth costs more than the few pixels the page shifts when a scrollbar appears.
 - Tap area minimum `--tap` 44 × 44 px, measured on what responds to a tap (a wrapping `<label>` counts); primary 48px tall. That is stricter than WCAG AA's 24px, matching AAA and Apple's guideline, because this is mostly a phone app used at a glance. Inline text links are exempt. Only exception: the floating window's controls, which shrink to 36px before hiding.
 - `--radius` 2px on every boxed control. Circles only for the face dots.
 
@@ -371,7 +373,7 @@ Every button below is a native `<button type="button">` (or `type="submit"` in a
 
 ### Next card — `.next-card`
 
-**Description.** Full mode only, during the warning: the next activity takes the stage between the time figures and the controls. A raised panel with a `--rule` border; an ochre fill (`.next-fill`, 22%) grows across it with `--p` while the title grows from 22 to 36px. The only boxed surface on the running screen.
+**Description.** Full mode only, during the warning: the next activity takes the stage between the time figures and the controls. A raised panel with a `--rule` border; an ochre fill (`.next-fill`, 22%) grows across it with `--p` while the title grows from 22 to 36px. The only boxed surface on the running screen. In dark mode the full fill lifts the panel enough that `--ink-soft` drops to 3.89:1, so the label, first step and note use `--ink` there.
 
 | State | Visual | Behavior |
 |---|---|---|
@@ -452,16 +454,16 @@ Every button below is a native `<button type="button">` (or `type="submit"` in a
 
 ### Toast — `.toast`
 
-**Description.** A short inverted ink bar at the bottom: "Session stopped", "Preset removed", "Preset saved", with Undo where it applies. Hides after 10 seconds, or when a new session starts.
+**Description.** A short inverted ink bar at the bottom: "Session stopped", "Preset removed", "Preset saved", with Undo where it applies. Hides after 10 seconds, or when a new session starts. It never hides while the pointer or keyboard focus is on it; leaving it starts a fresh 10 seconds.
 
-**Accessibility.** `role="status"`, so it is announced without taking focus. Undo is a normal text button in it.
+**Accessibility.** Shown at the bottom but placed right after the top bar in the page, so Undo is one Shift+Tab back from the screen heading that takes focus when the screen changes. Its text is spoken through the page's live region ("Session stopped. Undo available."), because a live region that appears already filled is often not read. Undo is a normal text button; its keyboard focus is a 2px `--paper` outline, since ochre ink would vanish on the ink bar.
 
 | ✅ Do | ❌ Don't |
 |---|---|
 | Offer Undo instead of asking "Are you sure?" | Use it for errors; those go next to the field |
 
 ```html
-<div class="toast" id="toast" role="status" hidden><span id="toast-text"></span><button type="button" class="text-btn mono" id="toast-undo">Undo</button></div>
+<div class="toast" id="toast" hidden><span id="toast-text"></span><button type="button" class="text-btn mono" id="toast-undo">Undo</button></div>
 ```
 
 ### Light — `.light`
@@ -483,7 +485,7 @@ Every button below is a native `<button type="button">` (or `type="submit"` in a
 
 ### Faces — `canvas.face`
 
-**Description.** The time picture, drawn by [js/faces.js](js/faces.js): `disc` (Full, Simple), `level`, `sun`, `planner` (Work, and offered in Full). Level and Sun draw ink clock hands in Work, where they are the disguise, and soft hands in Full (`hands: 'soft'` in the model: `--ink` at 70% opacity, 70% width, never under 1.5px), so they don't compete with the time left. Soft hands measure 4.0:1 over the wash in light mode and 3.6:1 in dark. The hands and hub are one filled shape, so translucent ink doesn't pool darker where they cross. Each takes a model and the palette, so one drawing serves the page, the floating window and the video.
+**Description.** The time picture, drawn by [js/faces.js](js/faces.js): `disc` (Full, Simple), `level`, `sun`, `planner` (Work, and offered in Full). Level and Sun draw ink clock hands in Work, where they are the disguise, and soft hands in Full (`hands: 'soft'` in the model: `--ink` at 70% opacity, 70% width, never under 1.5px), so they don't compete with the time left. Soft hands measure 4.0:1 over the wash in light mode and 3.6:1 in dark. The hands and hub are one filled shape, so translucent ink doesn't pool darker where they cross. The disc's outer ring is the whole the wash is read against, so it is drawn in `--rule-strong` (3.17:1 light, 3.62:1 dark), not `--rule`. Each takes a model and the palette, so one drawing serves the page, the floating window and the video.
 
 | Mode | Role | Behavior |
 |---|---|---|
@@ -509,8 +511,8 @@ Every button below is a native `<button type="button">` (or `type="submit"` in a
 | Setup form | field, line input, seg, chips, inline field, select, error, primary + text buttons | Optional fields are labeled, not starred. Enter moves between word fields. No validation until submit. |
 | Running screen | title, next line, ribbon, face, figures, next card, controls | One thing of primary importance. Controls sit under an ink rule; the next card comes above them. |
 | Handoff (finish screen) | label, display title, landing-main primary, chips, inline start form, note field, extend controls | The next activity takes the title position; one tap starts it. |
-| Undo instead of confirm | toast + text button | Stopping and removing a preset never ask first; Undo stays for 10 seconds. |
-| Live announcements | one `aria-live="polite"` region | Speaks the warning, the finish and keyboard mode switches; never each minute. Work mode says "Session finished" only. |
+| Undo instead of confirm | toast + text button | Stopping and removing a preset never ask first; Undo stays for 10 seconds, and longer while it is pointed at or focused. |
+| Live announcements | one `aria-live="polite"` region | Speaks the warning, the finish, keyboard mode switches and the toast; never each minute. Work mode says "Session finished" only. |
 | Mode-specific content | `.only-full`, `.only-work`, `.only-simple`, `.not-simple` | Swap words per mode inside one element rather than duplicating elements. |
 | Floating window | `body.pip`, `.pip-*` | Sized in `vmin`. Drops controls, then figures, then the next line before the face shrinks. |
 

@@ -22,7 +22,7 @@ export function palette(root = document.documentElement) {
   const cs = getComputedStyle(root);
   const v = name => cs.getPropertyValue(name).trim();
   return {
-    paper: v('--paper'), raised: v('--paper-raised'), rule: v('--rule'),
+    paper: v('--paper'), raised: v('--paper-raised'), rule: v('--rule'), ruleStrong: v('--rule-strong'),
     ink: v('--ink'), inkSoft: v('--ink-soft'), ochre: v('--ochre'), ochreInk: v('--ochre-ink'),
     wash: parseFloat(v('--wash-alpha')) || 0.5,
     light: parseFloat(v('--light-alpha')) || 0.12,
@@ -65,8 +65,9 @@ export function paintWarmth(ctx, w, h, warmth, p) {
 function drawDisc(ctx, w, h, m, p) {
   const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.46;
 
+  // The whole: the reference the wash is read against, so it needs 3:1.
   circle(ctx, cx, cy, R);
-  ctx.strokeStyle = p.rule;
+  ctx.strokeStyle = p.ruleStrong;
   ctx.lineWidth = 1;
   ctx.stroke();
 
