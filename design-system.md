@@ -410,7 +410,7 @@ Every button below is a native `<button type="button">` (or `type="submit"` in a
 
 ### Face switch — `.dot`
 
-**Description.** The choice of face in Work and Full modes: 44px buttons, each drawing an 8px circle. Work shows Level, Sun and Planner (the Disc dot is hidden, since a shrinking disc reads as a timer); Full adds Disc last, so the first three dots sit in the same places in both modes. Each mode remembers its own choice (`settings.face`, `settings.fullFace`, looked up through `faceSetting()` in draw.js). Simple has no switch and always shows the disc. In Full the dots sit under the time figures; in phone landscape they left-align with the other controls.
+**Description.** The choice of face in Work and Full modes: 44px buttons, each drawing an 8px circle. Work shows Level, Sun and Planner (the Disc and Ruler dots are hidden, since a shrinking disc or a ruled bar reads as a timer); Full adds Disc and Ruler last, so the first three dots sit in the same places in both modes. Each mode remembers its own choice (`settings.face`, `settings.fullFace`, looked up through `faceSetting()` in draw.js). Simple has no switch and always shows the disc. In Full the dots sit under the time figures; in phone landscape they left-align with the other controls.
 
 | State | Visual |
 |---|---|
@@ -419,7 +419,7 @@ Every button below is a native `<button type="button">` (or `type="submit"` in a
 | Selected (`aria-pressed="true"`) | Filled ink |
 | Focus | 2px `--ochre-ink` outline |
 
-**Accessibility.** `role="group"` labeled "Clock style" in Work and "Picture" in Full; each dot has an `aria-label` naming the face (Disc, Level, Sun, Planner) and `aria-pressed`.
+**Accessibility.** `role="group"` labeled "Clock style" in Work and "Picture" in Full; each dot has an `aria-label` naming the face (Disc, Level, Sun, Planner, Ruler) and `aria-pressed`.
 
 ```html
 <button type="button" class="dot" data-face="sun" aria-label="Sun" aria-pressed="false"></button>
@@ -485,7 +485,9 @@ Every button below is a native `<button type="button">` (or `type="submit"` in a
 
 ### Faces — `canvas.face`
 
-**Description.** The time picture, drawn by [js/faces.js](js/faces.js): `disc` (Full, Simple), `level`, `sun`, `planner` (Work, and offered in Full). Level and Sun draw ink clock hands in Work, where they are the disguise, and soft hands in Full (`hands: 'soft'` in the model: `--ink` at 70% opacity, 70% width, never under 1.5px), so they don't compete with the time left. Soft hands measure 4.0:1 over the wash in light mode and 3.6:1 in dark. The hands and hub are one filled shape, so translucent ink doesn't pool darker where they cross. The disc's outer ring is the whole the wash is read against, so it is drawn in `--rule-strong` (3.17:1 light, 3.62:1 dark), not `--rule`. Each takes a model and the palette, so one drawing serves the page, the floating window and the video.
+**Description.** The time picture, drawn by [js/faces.js](js/faces.js): `disc` (Full, Simple), `level`, `sun`, `planner` (Work, and offered in Full), `ruler` (Full only). Level and Sun draw ink clock hands in Work, where they are the disguise, and soft hands in Full (`hands: 'soft'` in the model: `--ink` at 70% opacity, 70% width, never under 1.5px), so they don't compete with the time left. Soft hands measure 4.0:1 over the wash in light mode and 3.6:1 in dark. The hands and hub are one filled shape, so translucent ink doesn't pool darker where they cross. The disc's outer ring is the whole the wash is read against, so it is drawn in `--rule-strong` (3.17:1 light, 3.62:1 dark), not `--rule`. Each takes a model and the palette, so one drawing serves the page, the floating window and the video.
+
+The ruler is the face for counting minutes: length is judged more accurately than area, and its marks give halves and quarters to judge against. A strip about 12% of the width tall, outlined in `--rule-strong`: time passed is raised paper hatched in `--rule` (as in the planner), time left is the wash, ending at a 1.5px `--ochre-ink` line. Minute marks in `--rule-strong` sit on real clock times along the top, every 1, 2, 5, 10, 15, 30 or 60 minutes so there are at most 10 (6 under 220px wide), longer on the quarter hour (the half hour with 2- and 10-minute marks, the hour with coarser ones); clock times in `--ink-soft` mono over the long marks, the end time in `--ink`. A dotted `--ochre-ink` line under the strip runs from where the warning begins to the end. "Now" is a 1px `--ink` line down to a 3px dot. It moves at a constant rate and never eases. Under 220px wide (the floating window) it drops the clock times.
 
 | Mode | Role | Behavior |
 |---|---|---|

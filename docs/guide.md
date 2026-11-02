@@ -53,7 +53,7 @@ The coloured disc is the time left. It shrinks steadily, with no ticking or jump
 
 Underneath, in small print: the minutes left and the clock time it ends.
 
-Prefer a different picture? The dots under the numbers switch to one of the three pictures from Work mode (Level, Sun and Planner, described under [Work](#work-looks-like-a-clock-not-a-timer)); the last dot brings back the disc. In Full mode, the clock hands on Level and Sun are drawn lighter, so the coloured part showing time left stands out. Full mode remembers your choice, separately from Work mode.
+Prefer a different picture? The dots under the numbers switch to one of the three pictures from Work mode (Level, Sun and Planner, described under [Work](#work-looks-like-a-clock-not-a-timer)); the fourth dot brings back the disc. The last dot is the Ruler, which only Full mode has: a straight strip, shaded where time has passed and coloured where it is left, with small marks for minutes and the clock times along the top. A thin line with a dot below it is "now", and a dotted line under the end shows where the "getting close" stage begins. It suits counting minutes rather than judging an amount. In Full mode, the clock hands on Level and Sun are drawn lighter, so the coloured part showing time left stands out. Full mode remembers your choice, separately from Work mode.
 
 If you left a note last time you did this activity, it appears as a bookmark ribbon: **Where you left off**.
 

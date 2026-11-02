@@ -8,9 +8,12 @@
 //          on a real clock grid; the "now" line moves down through it and the
 //          wash below the line is the time left. In the warning stage the page
 //          eases into a closer view of the last stretch and the next entry.
+// ruler    Full mode: a ruled strip on the page. Hatched where time has passed,
+//          washed where it remains, with minute marks and clock times along
+//          the top, so the time left can be counted as well as judged.
 //
-// Full mode can show any of the four, drawing level and sun with soft hands;
-// Work mode never shows the disc.
+// Full mode can show any of the five, drawing level and sun with soft hands;
+// Work mode never shows the disc or the ruler.
 
 import { MIN } from './engine.js';
 
@@ -46,6 +49,7 @@ function circle(ctx, x, y, r) {
 export function drawFace(ctx, w, h, name, m, p) {
   if (name === 'disc') drawDisc(ctx, w, h, m, p);
   else if (name === 'planner') drawPlanner(ctx, w, h, m, p);
+  else if (name === 'ruler') drawRuler(ctx, w, h, m, p);
   else drawClock(ctx, w, h, m, p, name);
 }
 
@@ -239,6 +243,133 @@ function drawSun(ctx, cx, cy, R, m, p) {
   ctx.moveTo(cx - chord, hy);
   ctx.lineTo(cx + chord, hy);
   ctx.stroke();
+}
+
+/* ---------- ruler ---------- */
+
+// Length is read more accurately than area, and the marks give the eye halves
+// and quarters to judge against, so this is the face for counting minutes.
+// Everything moves at a constant rate: it calibrates, it doesn't reassure.
+function drawRuler(ctx, w, h, m, p) {
+  // The floating window; a 320px phone's face (about 256px) still has room for clock times.
+  const small = w < 220;
+  const labelSize = small ? 0 : Math.min(13, Math.max(11, w / 34));
+  const pad = small ? 10 : Math.round(Math.min(36, Math.max(18, w * 0.08)));
+  const x0 = pad, x1 = w - pad, L = x1 - x0;
+  // About an eighth of the width: wide enough to read from the corner of the
+  // eye, thin enough to stay a line on the page rather than a block.
+  const H = Math.round(Math.min(h * 0.3, Math.max(small ? 16 : 22, w * 0.12)));
+  const above = small ? 9 : labelSize + 13, below = small ? 12 : 16;
+  const y0 = Math.round((h - (above + H + below)) / 2 + above) + 0.5, y1 = y0 + H;
+
+  const start = m.endAt - m.totalMs;
+  const xAt = t => x0 + ((t - start) / m.totalMs) * L;
+  const nowX = x0 + (1 - m.frac) * L;
+
+  // Time passed: shaded in pencil on raised paper, like a page already used.
+  if (nowX > x0) {
+    ctx.fillStyle = p.raised;
+    ctx.fillRect(x0, y0, nowX - x0, H);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x0, y0, nowX - x0, H);
+    ctx.clip();
+    ctx.strokeStyle = alpha(p.rule, 0.9);
+    ctx.lineWidth = 1;
+    for (let k = -H; k < nowX - x0 + H; k += 6) {
+      ctx.beginPath();
+      ctx.moveTo(x0 + k, y1);
+      ctx.lineTo(x0 + k + H, y0);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Time left: the wash, ending at a firm ochre-ink line, so the eye measures
+  // one distance, from now to the end.
+  if (m.frac > 0) {
+    ctx.fillStyle = alpha(p.ochre, m.paused ? p.wash * 0.55 : p.wash + 0.15 * m.warnP);
+    ctx.fillRect(nowX, y0, x1 - nowX, H);
+  }
+  ctx.strokeStyle = p.ruleStrong;
+  ctx.lineWidth = 1;
+  // On half pixels, so the side edges are as crisp as the top and bottom.
+  ctx.strokeRect(x0 + 0.5, y0, Math.round(L) - 1, H);
+  ctx.fillStyle = p.ochreInk;
+  ctx.fillRect(x1 - 1.5, y0 - 0.5, 1.5, H + 1);
+
+  // Minute marks on real clock times along the top edge. Fine marks are longer
+  // each quarter hour, or each half hour where 2- and 10-minute marks miss
+  // the quarters; coarse ones each hour. Clock times sit over the long marks,
+  // and the end time is in full ink.
+  const step = [1, 2, 5, 10, 15, 30, 60, 120].map(x => x * MIN).find(s => m.totalMs / s <= (small ? 6 : 10)) || 240 * MIN;
+  const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+  const lcm = (a, b) => (a / gcd(a, b)) * b;
+  const major = lcm(step, step < 15 * MIN ? 15 * MIN : 60 * MIN);
+  const tz = new Date().getTimezoneOffset() * MIN;
+  const local = t => t - tz;
+  ctx.font = `400 ${labelSize}px ${MONO}`;
+  ctx.textBaseline = 'alphabetic';
+  const endText = m.fmtClock(m.endAt);
+  let endLabelX = Infinity;
+  if (!small) {
+    endLabelX = x1 - ctx.measureText(endText).width;
+    ctx.fillStyle = p.ink;
+    ctx.textAlign = 'right';
+    ctx.fillText(endText, x1 + 1, y0 - 11);
+  }
+  ctx.strokeStyle = p.ruleStrong;
+  ctx.lineWidth = 1;
+  ctx.textAlign = 'center';
+  ctx.fillStyle = p.inkSoft;
+  let lastLabel = -Infinity;
+  for (let t = Math.ceil(local(start) / step) * step + tz; t < m.endAt; t += step) {
+    const x = Math.round(xAt(t)) + 0.5;
+    const long = local(t) % major === 0;
+    ctx.beginPath();
+    ctx.moveTo(x, y0 - 0.5);
+    ctx.lineTo(x, y0 - (long ? 7 : 4));
+    ctx.stroke();
+    if (small || !long) continue;
+    const text = m.fmtClock(t), half = ctx.measureText(text).width / 2;
+    const lx = Math.max(half, x);
+    // A short session can end in the same clock minute as a long mark.
+    if (text === endText || lx - half < lastLabel + 8 || lx + half > endLabelX - 8) continue;
+    ctx.fillText(text, lx, y0 - 11);
+    lastLabel = lx + half;
+  }
+
+  // The last stretch, seen coming from the start: a dotted line under the strip
+  // from where the warning stage begins, with a small tick at its start.
+  if (m.warnFrac < 1) {
+    const wx = Math.round(x0 + (1 - m.warnFrac) * L);
+    const ly = y1 + (small ? 4 : 6);
+    ctx.strokeStyle = p.ochreInk;
+    ctx.lineWidth = 1.25;
+    ctx.setLineDash([2, 4]);
+    ctx.beginPath();
+    ctx.moveTo(wx, ly);
+    ctx.lineTo(x1, ly);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(wx + 0.75, y1 + 2);
+    ctx.lineTo(wx + 0.75, ly + 4);
+    ctx.stroke();
+  }
+
+  // Now, as a calendar marks it: a fine ink line down through the strip to a dot.
+  const nx = Math.round(nowX) + 0.5, dotY = y1 + below - 4;
+  ctx.strokeStyle = p.ink;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(nx, y0);
+  ctx.lineTo(nx, dotY);
+  ctx.stroke();
+  circle(ctx, nx, dotY, small ? 2.5 : 3);
+  ctx.fillStyle = p.ink;
+  ctx.fill();
 }
 
 /* ---------- planner page ---------- */
