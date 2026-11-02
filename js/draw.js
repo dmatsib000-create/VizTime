@@ -4,7 +4,8 @@
 import * as E from './engine.js';
 import { palette, drawFace, paintWarmth, SERIF } from './faces.js';
 import { mode, session, settings, persist } from './state.js';
-import { $, body, dateFmt, fmtClock, fmtShort, fmtLeft } from './ui.js';
+import { $, body, dateFmt, fmtClock, fmtShort } from './ui.js';
+import { pageTitle } from './words.js';
 import { labelChips } from './setup.js';
 import { playCue, onFinished, syncWake } from './session.js';
 import { renderRun, labelMain } from './screens.js';
@@ -49,10 +50,7 @@ export function tick() {
 }
 
 function updateTitle(now) {
-  let t = 'VizTime';
-  if (mode === 'work') t = 'Day';
-  else if (session && session.finishedAt) t = 'Finished · VizTime';
-  else if (session) t = `${session.pausedAt ? 'Paused · ' : ''}${fmtLeft(E.remaining(session, now))} · ${session.title || 'VizTime'}`;
+  const t = pageTitle(mode, session, now);
   if (document.title !== t) document.title = t;
 }
 

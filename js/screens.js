@@ -4,6 +4,7 @@ import * as E from './engine.js';
 import { getNote, setNote } from './store.js';
 import { mode, session, settings, saveSettings } from './state.js';
 import { $, body, fmtClock, fmtShort, fmtLeft } from './ui.js';
+import { faceLabel as pictureLabel } from './words.js';
 import { renderSetup, labelChips, showRibbon, showError } from './setup.js';
 import { startSession, endSession, suggestedMinutes, syncWake } from './session.js';
 import { tick, faceName, faceSetting } from './draw.js';
@@ -199,13 +200,8 @@ for (const d of document.querySelectorAll('[data-face]')) {
   d.addEventListener('click', () => { settings[faceSetting()] = d.dataset.face; saveSettings(); render(); });
 }
 
-// What the picture says to a screen reader. Work mode stays discreet: it is a
-// clock until asked, then the reveal speaks the time left.
-export function faceLabel(now) {
-  if (!session) return '';
-  if (mode === 'work') return 'Clock. Show time left';
-  return `${session.pausedAt ? 'Paused, ' : ''}${fmtLeft(E.remaining(session, now))} left, ends ${fmtClock(session.endAt)}`;
-}
+// What the picture says to a screen reader (words.js; the floating window uses it too).
+export const faceLabel = now => pictureLabel(mode, session, now);
 
 // Tapping the clock (or Enter or Space on it) privately shows the time left
 // for a few seconds.
