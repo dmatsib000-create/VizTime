@@ -69,8 +69,9 @@ export function paintWarmth(ctx, w, h, warmth, p) {
 function drawDisc(ctx, w, h, m, p) {
   const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.46;
 
+  // The whole: the reference the wash is read against, so it needs 3:1.
   circle(ctx, cx, cy, R);
-  ctx.strokeStyle = p.rule;
+  ctx.strokeStyle = p.ruleStrong;
   ctx.lineWidth = 1;
   ctx.stroke();
 

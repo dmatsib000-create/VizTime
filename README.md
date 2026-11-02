@@ -27,7 +27,7 @@ Switch modes with **Full · Work · Simple** at the top of the screen, or **Alt+
 
 ## Stop, finish, reset
 
-- **Stop** discards the session and returns to a clean setup. Undo is offered for ten seconds.
+- **Stop** discards the session and returns to a clean setup. Undo is offered for ten seconds, and stays while the pointer or keyboard focus is on it.
 - **Finish now** ends early and goes to the handoff.
 - Taking time off is as easy as adding it. Taking off more than is left finishes quietly; cues it skips past don't play.
 - Setup is always clean after a session. Nothing is pre-filled.

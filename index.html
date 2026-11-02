@@ -40,6 +40,9 @@
   </div>
 </header>
 
+<!-- Shown at the bottom, but placed here so Undo is one Shift+Tab from the screen heading. -->
+<div class="toast" id="toast" hidden><span id="toast-text"></span><button type="button" class="text-btn mono" id="toast-undo">Undo</button></div>
+
 <main id="main">
 
   <!-- ===== Setup: full and work modes ===== -->
@@ -324,7 +327,6 @@
   </form>
 </dialog>
 
-<div class="toast" id="toast" role="status" hidden><span id="toast-text"></span><button type="button" class="text-btn mono" id="toast-undo">Undo</button></div>
 <p class="sr-only" id="live" aria-live="polite"></p>
 <canvas id="video-canvas" width="360" height="360" hidden></canvas>
 

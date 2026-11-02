@@ -326,6 +326,8 @@ body[data-mode="simple"] .not-simple { display: none; }
 .next-step, .next-note { margin: var(--s2) 0 0; font-size: 16px; color: var(--ink-soft); }
 .next-step:empty, .next-note:empty { display: none; }
 .next-note { font-style: italic; }
+/* In dark mode the full fill lifts the panel enough to drop soft text to 3.89:1, so the card's small text goes to ink. */
+@media (prefers-color-scheme: dark) { .next-card .label, .next-step, .next-note { color: var(--ink); } }
 @keyframes fade { from { opacity: 0; } }
 
 .leave-note { margin: 0 0 var(--s5); }
@@ -377,7 +379,8 @@ body[data-mode="full"] .faces-switch { margin: 0 0 var(--s4); }
 .work-tools { justify-content: flex-end; gap: var(--s5); margin: var(--s2) 0; }
 
 @media (min-width: 820px) {
-  body[data-mode="work"] main, body[data-mode="work"] .bar { max-width: 1040px; }
+  /* The top bar is this wide in every mode, so the mode switch never moves under the pointer; only Work's content widens to meet it. */
+  .bar, body[data-mode="work"] main { max-width: 1040px; }
   body[data-mode="work"] #run {
     display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); column-gap: var(--s7);
     grid-template-areas: "face head" "face tools" "face note" "face controls" "face ." "switch .";
@@ -404,11 +407,13 @@ body[data-mode="simple"] .figures { font-size: 17px; }
 
 /* Phone on its side: picture beside the words. */
 @media (orientation: landscape) and (max-height: 520px) {
-  .bar { margin-bottom: var(--s2); }
+  /* The top bar is as wide as the widest mode, the same in all three: 900px here, Work's 1040px from 820px wide. */
+  .bar { margin-bottom: var(--s2); max-width: 900px; }
+  @media (min-width: 820px) { .bar { max-width: 1040px; } }
   body[data-mode="full"] #run, body[data-mode="simple"] #run {
     display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--s6); align-items: start;
   }
-  body[data-mode="full"] main, body[data-mode="simple"] main, body[data-mode="full"] .bar, body[data-mode="simple"] .bar { max-width: 900px; }
+  body[data-mode="full"] main, body[data-mode="simple"] main { max-width: 900px; }
   /* Work mode keeps its own grid (min-width: 820px above), which a large phone on its side also reaches. */
   body:not([data-mode="work"]) #run .face-wrap { grid-row: 1 / span 6; grid-column: 1; margin: 0; }
   body:not([data-mode="work"]) #run .face { width: min(78dvh, 44vw); }
@@ -471,6 +476,8 @@ input[type="range"] { accent-color: var(--ink); width: 10em; }
   font: 400 14px var(--mono); animation: fade var(--dur-fade) var(--ease);
 }
 .toast .text-btn { color: var(--paper); text-decoration-color: var(--paper); }
+/* Ochre ink would vanish on the ink bar, so Undo's keyboard focus is a paper outline. */
+.toast .text-btn:focus-visible { outline: 2px solid var(--paper); outline-offset: -2px; }
 
 .pip-video { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 

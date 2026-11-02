@@ -64,7 +64,7 @@ If you left a note last time you did this activity, it appears as a bookmark rib
 | **Pause** | Stops the clock until you tap it again. |
 | **−5, −1, +1, +5** | Take minutes off or add them. Taking time off is as easy as adding it, in case you set the wrong length. |
 | **Finish now** | Ends early and goes straight to "what's next". Nothing is lost. |
-| **Stop** | Throws this session away and returns to a blank setup. **Undo** appears for 10 seconds in case it was a mistake. |
+| **Stop** | Throws this session away and returns to a blank setup. **Undo** appears for 10 seconds in case it was a mistake, and stays while you point at it. |
 
 You can close VizTime or switch off your phone and come back later. It picks up where it should be, because it remembers when the session ends, not how many seconds were left.
 
