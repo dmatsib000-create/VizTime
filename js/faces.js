@@ -251,7 +251,7 @@ function drawSun(ctx, cx, cy, R, m, p) {
 // and quarters to judge against, so this is the face for counting minutes.
 // Everything moves at a constant rate: it calibrates, it doesn't reassure.
 function drawRuler(ctx, w, h, m, p) {
-  // The floating window; a 320px phone's face (about 256px) still has room for clock times.
+  // A narrow floating window. Its usual 244px, and a 320px phone's face, still have room for clock times.
   const small = w < 220;
   // On the page the strip runs to the column's edges, leaving room only for the now dot.
   const pad = small ? 10 : 4;
