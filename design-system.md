@@ -410,7 +410,7 @@ Every button below is a native `<button type="button">` (or `type="submit"` in a
 
 ### Face switch — `.dot`
 
-**Description.** The choice of face in Work and Full modes: 44px buttons, each drawing an 8px circle. Work shows Level, Sun and Planner (the Disc and Ruler dots are hidden, since a shrinking disc or a ruled bar reads as a timer); Full adds Disc and Ruler last, so the first three dots sit in the same places in both modes. Each mode remembers its own choice (`settings.face`, `settings.fullFace`, looked up through `faceSetting()` in draw.js). Simple has no switch and always shows the disc. In Full the dots sit under the time figures; in phone landscape they left-align with the other controls.
+**Description.** The choice of face in Work and Full modes: 44px buttons, each drawing an 8px circle. Work shows Level, Sun and Planner (the Disc and Ruler dots are hidden, since a shrinking disc or a ruled bar reads as a timer); Full adds Disc and Ruler last, so the first three dots sit in the same places in both modes. Each mode remembers its own choice (`settings.face`, `settings.fullFace`, looked up through `faceSetting()` in draw.js). `faceName()` draws only a picture the mode offers, falling back to its first (Planner in Work, Disc in Full), so a saved Disc or Ruler can never reach Work mode even if the stylesheet changes. Simple has no switch and always shows the disc. In Full the dots sit under the time figures; in phone landscape they left-align with the other controls.
 
 | State | Visual |
 |---|---|

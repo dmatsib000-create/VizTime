@@ -5,7 +5,8 @@
       "name": "viztime",
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8765"],
-      "port": 8765
+      "port": 8765,
+      "autoPort": false
     }
   ]
 }
