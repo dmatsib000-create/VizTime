@@ -13,4 +13,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      # The tests import only the pure modules; this catches a syntax error in
+      # any script, which would otherwise ship and stop the app loading.
+      - name: Check every script parses
+        run: for f in js/*.js sw.js; do node --check "$f" || exit 1; done
       - run: node --test

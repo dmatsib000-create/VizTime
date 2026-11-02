@@ -13,6 +13,7 @@ A calm visual timer for an adult with time blindness and trouble with transition
 | The same, for someone non-technical | [docs/guide.md](docs/guide.md) |
 | What each script does | The comment at the top of [js/app.js](js/app.js) |
 | What real devices actually allow | [docs/device-tests.md](docs/device-tests.md), using the [check/](check/index.html) page. Not part of the app. |
+| Why the platform limits are what they are | [docs/research/](docs/research/README.md): dated reports with sources. The device tests win where they disagree. |
 
 When docs disagree: build-prompt.md, then design-direction.md, then design-system.md. If you change behaviour, update README.md and docs/guide.md; if you change a component, update design-system.md.
 

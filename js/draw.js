@@ -86,9 +86,17 @@ export function faceModel(now) {
 }
 
 // Work and Full each remember their own picture; Simple always has the disc.
+// Only the pictures a mode offers are drawn, whatever was saved: Work mode
+// must never show the disc or the ruler, which read as a timer, and the
+// stylesheet hiding their dots shouldn't be the only thing that ensures it.
 const FACE_SETTING = { work: 'face', full: 'fullFace' };
+const FACES = { work: ['planner', 'level', 'sun'], full: ['disc', 'level', 'sun', 'planner', 'ruler'], simple: ['disc'] };
 export const faceSetting = () => FACE_SETTING[mode];
-export const faceName = () => settings[faceSetting()] || 'disc';
+export const faceName = () => {
+  const offered = FACES[mode] || FACES.simple;
+  const saved = settings[faceSetting()];
+  return offered.includes(saved) ? saved : offered[0];
+};
 
 export function paint(canvas, name, m) {
   const r = canvas.getBoundingClientRect();
