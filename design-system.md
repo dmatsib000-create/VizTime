@@ -88,6 +88,8 @@ Weights: 400 everywhere; 500 only for the selected chip and `<strong>` in figure
 
 `prefers-reduced-motion` removes CSS transitions and animations except the finish cues the person turned on: breathing slows to 12s and the flashes become three soft 4s swells. JS steps warmth in thirds. The faces keep moving because they are the information.
 
+The faces are drawn only as often as they move (`redrawGap` in faces.js): through most of a session, every `totalMs / 2000` ms, at most once a second, so no step is larger than half a pixel; every 80ms in the first 3% and last 5% of a session (where the level, across the narrow top and bottom of its dial, and the disc, near its centre, move fastest), in the last stretch, and while the light or the planner's zoom settles; once a second while paused. Anything that changes the screen calls `requestPaint()` (render does), so a new picture, a pause or +5 shows at once. Planner and ruler share their clock marks (`clockMarks`) and their shading of time passed (`shadePassed`).
+
 ### Focus
 
 Global: `2px solid var(--ochre-ink)`, offset 2px, `:focus-visible` only. Text buttons swap to a 2px ochre-ink underline. Line inputs show a 2px ochre-ink bottom rule (1px border plus 1px shadow). Headings that receive programmatic focus (`tabindex="-1"`) show nothing; screens.js moves focus to each screen's heading when the screen changes.

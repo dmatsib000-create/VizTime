@@ -7,7 +7,7 @@ import { $, body, fmtClock, fmtShort, fmtLeft } from './ui.js';
 import { faceLabel as pictureLabel } from './words.js';
 import { renderSetup, labelChips, showRibbon, showError } from './setup.js';
 import { startSession, endSession, suggestedMinutes, syncWake } from './session.js';
-import { tick, faceName, faceSetting } from './draw.js';
+import { tick, faceName, faceSetting, requestPaint } from './draw.js';
 import { canFloatWindow, canFloatVideo } from './float.js';
 import { renderFloatText } from './pip.js';
 
@@ -31,6 +31,7 @@ export function render() {
   if (session && !session.finishedAt) renderRun();
   if (session && session.finishedAt) renderLanding();
   $('float-btn').hidden = !(session && !session.finishedAt && (canFloatWindow() || canFloatVideo()));
+  requestPaint();
   tick();
   syncWake();
   if (changed) focusScreen(screen);

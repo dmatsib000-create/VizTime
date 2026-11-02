@@ -45,6 +45,63 @@ function circle(ctx, x, y, r) {
   ctx.arc(x, y, Math.max(0, r), 0, Math.PI * 2);
 }
 
+// Time passed: raised paper shaded in pencil, the same on every face that has
+// it. The lines sit on a fixed 7px pitch from the left edge, so they don't
+// shimmer as the shaded part grows.
+function shadePassed(ctx, x, y, w, h, p) {
+  if (w <= 0 || h <= 0) return;
+  ctx.fillStyle = p.raised;
+  ctx.fillRect(x, y, w, h);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip();
+  ctx.strokeStyle = alpha(p.rule, 0.9);
+  ctx.lineWidth = 1;
+  for (let k = -Math.ceil(h / 7) * 7; k < w; k += 7) {
+    ctx.beginPath();
+    ctx.moveTo(x + k, y);
+    ctx.lineTo(x + k + h, y + h);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ---------- Marks on the clock, and how often to draw ---------- */
+
+const MARK_STEPS = [1, 2, 5, 10, 15, 30, 60, 120].map(x => x * MIN);
+const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+const lcm = (a, b) => (a / gcd(a, b)) * b;
+
+// Marks on real clock times from `from` to `to`, both included, about `most`
+// of them at most: every 1, 2, 5, 10, 15, 30, 60 or 120 minutes (240 beyond).
+// Fine marks are long each quarter hour, or each half hour where 2- and
+// 10-minute steps miss the quarters; coarse ones each hour. `tzOffset` is in
+// minutes, as getTimezoneOffset() gives it.
+export function clockMarks(from, to, most, tzOffset = new Date(from).getTimezoneOffset()) {
+  const step = MARK_STEPS.find(s => (to - from) / s <= most) || 240 * MIN;
+  const major = lcm(step, step < 15 * MIN ? 15 * MIN : 60 * MIN);
+  const tz = tzOffset * MIN;
+  const marks = [];
+  for (let t = Math.ceil((from - tz) / step) * step + tz; t <= to; t += step) marks.push({ t, long: (t - tz) % major === 0 });
+  return marks;
+}
+
+// How long the page may wait, in ms, before drawing the picture again. Through
+// the middle of a session every face's fastest part moves at most about 1.5
+// times its size (up to 640px) over the session, so waiting totalMs / 2000
+// keeps each step under half a pixel; a long session is drawn about once a
+// second. Near the ends the level (narrow top and bottom of its dial) and the
+// disc (small centre) move much faster, so the first 3% and last 5% of a
+// session are drawn smoothly, as are the warning stage and the light or zoom
+// settling. `frac` is the share of the session left.
+export function redrawGap({ totalMs, stage, paused, frac }, settling) {
+  if (settling) return 80;
+  if (paused) return 1000;
+  if (stage !== 'running' || frac > 0.97 || frac < 0.05) return 80;
+  return Math.min(1000, Math.max(80, totalMs / 2000));
+}
+
 // Draws onto whatever is already there; callers clear or fill the background.
 export function drawFace(ctx, w, h, name, m, p) {
   if (name === 'disc') drawDisc(ctx, w, h, m, p);
@@ -267,24 +324,8 @@ function drawRuler(ctx, w, h, m, p) {
   const xAt = t => x0 + ((t - start) / m.totalMs) * L;
   const nowX = x0 + (1 - m.frac) * L;
 
-  // Time passed: shaded in pencil on raised paper, like a page already used.
-  if (nowX > x0) {
-    ctx.fillStyle = p.raised;
-    ctx.fillRect(x0, y0, nowX - x0, H);
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(x0, y0, nowX - x0, H);
-    ctx.clip();
-    ctx.strokeStyle = alpha(p.rule, 0.9);
-    ctx.lineWidth = 1;
-    for (let k = -H; k < nowX - x0 + H; k += 6) {
-      ctx.beginPath();
-      ctx.moveTo(x0 + k, y1);
-      ctx.lineTo(x0 + k + H, y0);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
+  // Time passed, like a page already used.
+  shadePassed(ctx, x0, y0, nowX - x0, H, p);
 
   // Time left: the wash, ending at a firm ochre-ink line, so the eye measures
   // one distance, from now to the end.
@@ -299,16 +340,8 @@ function drawRuler(ctx, w, h, m, p) {
   ctx.fillStyle = p.ochreInk;
   ctx.fillRect(x1 - 1.5, y0 - 0.5, 1.5, H + 1);
 
-  // Minute marks on real clock times along the top edge. Fine marks are longer
-  // each quarter hour, or each half hour where 2- and 10-minute marks miss
-  // the quarters; coarse ones each hour. Clock times sit over the long marks,
-  // and the end time is in full ink.
-  const step = [1, 2, 5, 10, 15, 30, 60, 120].map(x => x * MIN).find(s => m.totalMs / s <= (small ? 6 : 10)) || 240 * MIN;
-  const gcd = (a, b) => (b ? gcd(b, a % b) : a);
-  const lcm = (a, b) => (a / gcd(a, b)) * b;
-  const major = lcm(step, step < 15 * MIN ? 15 * MIN : 60 * MIN);
-  const tz = new Date().getTimezoneOffset() * MIN;
-  const local = t => t - tz;
+  // Minute marks on real clock times along the top edge (clockMarks), clock
+  // times over the long ones, and the end time in full ink.
   ctx.font = `400 ${labelSize}px ${MONO}`;
   ctx.textBaseline = 'alphabetic';
   const endText = m.fmtClock(m.endAt);
@@ -324,9 +357,9 @@ function drawRuler(ctx, w, h, m, p) {
   ctx.textAlign = 'center';
   ctx.fillStyle = p.inkSoft;
   let lastLabel = -Infinity;
-  for (let t = Math.ceil(local(start) / step) * step + tz; t < m.endAt; t += step) {
+  for (const { t, long } of clockMarks(start, m.endAt, small ? 6 : 10)) {
+    if (t >= m.endAt) break;
     const x = Math.round(xAt(t)) + 0.5;
-    const long = local(t) % major === 0;
     ctx.beginPath();
     ctx.moveTo(x, y0 - 0.5);
     ctx.lineTo(x, y0 - (long ? 7 : 4));
@@ -395,13 +428,10 @@ function drawPlanner(ctx, w, h, m, p) {
   const y = t => top + ((t - ws) / (we - ws)) * H;
 
   // Ruled grid on real clock times.
-  const span = we - ws;
-  const step = [1, 2, 5, 10, 15, 30, 60, 120].map(x => x * MIN).find(s => span / s <= (small ? 6 : 9)) || 240 * MIN;
-  const tz = new Date().getTimezoneOffset() * MIN;
   ctx.font = `400 ${labelSize}px ${MONO}`;
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'right';
-  for (let t = Math.ceil((ws - tz) / step) * step + tz; t <= we; t += step) {
+  for (const { t } of clockMarks(ws, we, small ? 6 : 9)) {
     const ly = Math.round(y(t)) + 0.5;
     ctx.strokeStyle = p.rule;
     ctx.lineWidth = 1;
@@ -435,23 +465,7 @@ function drawPlanner(ctx, w, h, m, p) {
 
   // The current block: hatched where time has passed, washed where it remains.
   const by0 = clampY(y(bStart)), by1 = clampY(y(bEnd)), ny = clampY(y(nowV));
-  if (ny > by0) {
-    ctx.fillStyle = p.raised;
-    ctx.fillRect(x0, by0, x1 - x0, ny - by0);
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(x0, by0, x1 - x0, ny - by0);
-    ctx.clip();
-    ctx.strokeStyle = alpha(p.rule, 0.9);
-    ctx.lineWidth = 1;
-    for (let k = -h; k < w + h; k += 7) {
-      ctx.beginPath();
-      ctx.moveTo(x0 + k, by0);
-      ctx.lineTo(x0 + k + (ny - by0), ny);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
+  shadePassed(ctx, x0, by0, x1 - x0, ny - by0, p);
   if (by1 > ny) {
     ctx.fillStyle = alpha(p.ochre, m.paused ? p.wash * 0.5 : p.wash * 0.85 + 0.12 * m.warnP);
     ctx.fillRect(x0, ny, x1 - x0, by1 - ny);

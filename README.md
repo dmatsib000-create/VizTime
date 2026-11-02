@@ -65,7 +65,7 @@ Then open http://localhost:8000.
 
 ## Tests
 
-The timer model, what the app says about time (including that Work mode only ever says "Session finished." and its tab is always "Day"), saved data and the offline file list have tests that use Node's built-in runner, so there is nothing to install. With Node 20 or later:
+The timer model, what the app says about time (including that Work mode only ever says "Session finished." and its tab is always "Day"), the faces' clock marks and how often they are drawn, saved data and the offline file list have tests that use Node's built-in runner, so there is nothing to install. With Node 20 or later:
 
 ```bash
 node --test

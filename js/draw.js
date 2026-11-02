@@ -2,7 +2,7 @@
 // draws the picture, the warm light and the zoom.
 
 import * as E from './engine.js';
-import { palette, drawFace, paintWarmth, SERIF } from './faces.js';
+import { palette, drawFace, paintWarmth, redrawGap, SERIF } from './faces.js';
 import { mode, session, settings, persist } from './state.js';
 import { $, body, dateFmt, fmtClock, fmtShort } from './ui.js';
 import { pageTitle } from './words.js';
@@ -132,10 +132,25 @@ export function step() {
   }
 }
 
+// How long until the picture needs drawing again (redrawGap in faces.js): about
+// once a second through most of a long session, smoothly near the end and
+// while the light or the planner's zoom settles.
+export function frameGap(now) {
+  const tg = targets(now);
+  const settling = Math.abs(tg.w - warmth) > 0.002 || Math.abs(tg.z - zoom) > 0.002;
+  if (!session || session.finishedAt) return settling ? 80 : 1000;
+  return redrawGap({ totalMs: session.totalMs, stage: E.stage(session, now), paused: !!session.pausedAt, frac: E.fraction(session, now) }, settling);
+}
+
+// A change on screen (a new picture, a pause, +5) is drawn at once, here and
+// in the floating window, rather than at the next gap.
+export let paintRequests = 0;
+export function requestPaint() { frame.force = true; paintRequests++; }
+
 let frameId = 0;
 export function frame(t) {
   frameId = requestAnimationFrame(frame);
-  if (!frame.force && t - lastFrame < 80) return;
+  if (!frame.force && t - lastFrame < frameGap(Date.now())) return;
   lastFrame = t;
   frame.force = false;
   drawMain();
@@ -198,3 +213,5 @@ document.addEventListener('visibilitychange', () => {
 });
 addEventListener('pageshow', wake);
 addEventListener('focus', wake);
+// A resized canvas is blank or stretched until drawn, so don't wait for the gap.
+addEventListener('resize', requestPaint);
