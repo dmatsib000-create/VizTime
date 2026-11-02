@@ -34,7 +34,7 @@ Switch modes with **Full · Work · Simple** at the top of the screen, or **Alt+
 
 ## Comfort
 
-**Quiet**, **Balanced** and **Noticeable** set everything at once. Under "Adjust each cue": a tone and a spoken line per moment (halfway, warning, finish), volume, light strength, a slow breathing light, three slow flashes, keeping the screen awake, and system notifications on a computer. Tones are soft bells with a slow attack. Work mode never speaks or notifies about anything except "Session finished."
+**Quiet**, **Balanced** and **Noticeable** set everything at once. Under "Adjust each cue": a tone and a spoken line per moment (halfway, warning, finish), volume, light strength, a slow breathing light, three slow flashes, keeping the screen awake, system notifications on a computer, and on iPhone, playing tones in Silent mode. Tones are soft bells with a slow attack. Work mode never speaks or notifies about anything except "Session finished."
 
 Sessions are stored as timestamps, so a running session survives closing and reopening the app. A cue whose moment passed while the app was closed is never played late.
 
@@ -45,7 +45,7 @@ Sessions are stored as timestamps, so a running session survives closing and reo
 
 ## Limits on iPhone
 
-A home-screen web app is suspended when it isn't on screen or the phone locks, so it can't sound a cue then. Keep the screen awake (on by default while a session runs) and leave VizTime open. Sound only works after a tap, the silent switch mutes it, and web apps can't vibrate. Notifications aren't available without a server.
+A home-screen web app is suspended when it isn't on screen or the phone locks, so it can't sound a cue then. Keep the screen awake (on by default while a session runs) and leave VizTime open. Sound only works after a tap, and Silent mode mutes it unless **Play tones in Silent mode** is on (Menu → Comfort, iOS 17 and later). That option asks iOS to treat the tone as playback while it sounds, which may pause music or a podcast meanwhile; it is off by default because Silent mode is often on for a reason. Web apps on iPhone can't vibrate, in any browser. Notifications aren't available without a server.
 
 ## Install
 

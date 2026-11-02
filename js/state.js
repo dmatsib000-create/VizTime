@@ -23,7 +23,7 @@ export const BUNDLES = {
 export const clone = o => JSON.parse(JSON.stringify(o));
 const DEFAULTS = {
   defaultMode: 'full', face: 'planner', fullFace: 'disc', bundle: 'balanced', ...clone(BUNDLES.balanced),
-  volume: 0.6, flash: false, wake: true, notify: false, rememberLengths: false,
+  volume: 0.6, flash: false, wake: true, notify: false, rememberLengths: false, silentTones: false,
 };
 const stored = load('settings', {});
 export const settings = { ...clone(DEFAULTS), ...stored, cues: { ...clone(DEFAULTS.cues), ...(stored.cues || {}) } };

@@ -303,6 +303,10 @@
           </tbody>
         </table>
         <div class="inline-field"><label class="inline-field" for="m-volume"><span class="mono">Volume</span></label><input type="range" id="m-volume" min="0" max="1" step="0.05"><button type="button" class="text-btn mono" id="m-test">Try it</button></div>
+        <div id="m-silent-wrap" hidden>
+          <label class="check"><input type="checkbox" id="m-silent" aria-describedby="m-silent-hint"> <span>Play tones in Silent mode</span></label>
+          <p class="hint" id="m-silent-hint">Silent mode mutes tones unless this is on. While a tone plays, music or a podcast may pause.</p>
+        </div>
         <label class="inline-field"><span class="mono">Warm light</span>
           <select class="select" id="m-warmth"><option value="subtle">subtle</option><option value="normal">normal</option><option value="strong">strong</option></select></label>
         <label class="check"><input type="checkbox" id="m-breathe"> <span>Slow breathing light at the finish</span></label>
