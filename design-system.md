@@ -69,8 +69,8 @@ Weights: 400 everywhere; 500 only for the selected chip and `<strong>` in figure
 `--s1` 4 · `--s2` 8 · `--s3` 12 · `--s4` 16 · `--s5` 24 · `--s6` 32 · `--s7` 48 · `--s8` 64
 
 - Field to field: `--s5`. Label to field: `--s1`. Section break: `--s6` or `--s7` above a `1px var(--ink)` rule with `--s3` under it.
-- Content width `--measure` 640px (Work mode on ≥820px: 1040px; landscape phone: 900px). On ≥820px the top bar is 1040px in every mode, so the mode switch, Float and Menu stay in the same place when the mode changes.
-- `html` reserves scrollbar space (`scrollbar-gutter: stable`, not in the floating window), so the page doesn't shift sideways between a screen that scrolls and one that doesn't.
+- Content width `--measure` 640px (Work mode on ≥820px: 1040px; landscape phone: 900px). The top bar is the same width in every mode, as wide as the widest one (1040px on ≥820px, 900px on a narrower landscape phone), so the mode switch, Float and Menu stay in the same place when the mode changes.
+- No `scrollbar-gutter`: reserved scrollbar space can't be covered by the light overlay (even `100vw` stops short of it), and an untinted strip at the edge during warmth costs more than the few pixels the page shifts when a scrollbar appears.
 - Tap area minimum `--tap` 44 × 44 px, measured on what responds to a tap (a wrapping `<label>` counts); primary 48px tall. That is stricter than WCAG AA's 24px, matching AAA and Apple's guideline, because this is mostly a phone app used at a glance. Inline text links are exempt. Only exception: the floating window's controls, which shrink to 36px before hiding.
 - `--radius` 2px on every boxed control. Circles only for the face dots.
 

@@ -69,8 +69,6 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-/* Room for a scrollbar whether or not there is one, so the page doesn't shift sideways between screens. Not in the floating window. */
-html:has(body:not(.pip)) { scrollbar-gutter: stable; }
 
 body {
   margin: 0;
@@ -409,11 +407,13 @@ body[data-mode="simple"] .figures { font-size: 17px; }
 
 /* Phone on its side: picture beside the words. */
 @media (orientation: landscape) and (max-height: 520px) {
-  .bar { margin-bottom: var(--s2); }
+  /* The top bar is as wide as the widest mode, the same in all three: 900px here, Work's 1040px from 820px wide. */
+  .bar { margin-bottom: var(--s2); max-width: 900px; }
+  @media (min-width: 820px) { .bar { max-width: 1040px; } }
   body[data-mode="full"] #run, body[data-mode="simple"] #run {
     display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--s6); align-items: start;
   }
-  body[data-mode="full"] main, body[data-mode="simple"] main, body[data-mode="full"] .bar, body[data-mode="simple"] .bar { max-width: 900px; }
+  body[data-mode="full"] main, body[data-mode="simple"] main { max-width: 900px; }
   /* Work mode keeps its own grid (min-width: 820px above), which a large phone on its side also reaches. */
   body:not([data-mode="work"]) #run .face-wrap { grid-row: 1 / span 6; grid-column: 1; margin: 0; }
   body:not([data-mode="work"]) #run .face { width: min(78dvh, 44vw); }
