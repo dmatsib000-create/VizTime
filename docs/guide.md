@@ -160,7 +160,7 @@ On an iPhone, **Float** works only when VizTime is open in Safari, not from the 
 |---|---|---|
 | The timer, all three modes | Yes | Yes |
 | Works without internet | Yes, after the first visit | Yes, after the first visit |
-| Sounds | Only while VizTime is open on screen, and only after you've tapped something. The silent switch mutes them. | Yes |
+| Sounds | Only while VizTime is open on screen, and only after you've tapped something. Silent mode mutes them, unless you turn on **Play tones in Silent mode** in Menu → Comfort. | Yes |
 | Keeping the screen awake | Yes (on by default during a session) | Yes |
 | Reminders when you're in another app | No | Yes, if you turn on **System notification** in Menu |
 | Vibration | No | No |
@@ -184,7 +184,7 @@ VizTime saves only what you ask it to: your settings, presets, the current sessi
 
 **I set the wrong length.** Use **−5**, **−1**, **+1** or **+5** while it runs. Taking off more than is left simply finishes it, quietly.
 
-**I didn't hear anything at the end.** Check **Menu → Comfort**: Quiet has no sounds. On an iPhone, check the silent switch, keep VizTime open on screen, and tap the screen once after opening it, because iPhones only allow sound after a tap.
+**I didn't hear anything at the end.** Check **Menu → Comfort**: Quiet has no sounds. On an iPhone, Silent mode mutes the bell: turn Silent mode off, or turn on **Play tones in Silent mode** in Menu → Comfort (music or a podcast may pause while the bell plays). Keep VizTime open on screen, and tap the screen once after opening it, because iPhones only allow sound after a tap.
 
 **The end passed while VizTime was closed.** When you reopen it, it goes straight to the finish screen. It doesn't play old sounds late.
 

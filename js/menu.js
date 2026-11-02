@@ -1,6 +1,6 @@
 // The menu sheet and the mode switch.
 
-import { chime, unlockAudio } from './sound.js';
+import { chime, unlockAudio, canPlayThroughSilent } from './sound.js';
 import { save } from './store.js';
 import { BUNDLES, clone, settings, saveSettings, mode, session, setMode } from './state.js';
 import { $, toast, announce } from './ui.js';
@@ -40,6 +40,8 @@ function renderMenu() {
   $('m-flash').checked = settings.flash;
   $('m-wake').checked = settings.wake;
   $('m-notify').checked = settings.notify;
+  $('m-silent').checked = settings.silentTones;
+  $('m-silent-wrap').hidden = !canPlayThroughSilent();
   $('m-remember').checked = settings.rememberLengths;
   $('m-forget').textContent = 'Forget saved lengths';
   $('m-notify-wrap').hidden = !('Notification' in window);
@@ -103,7 +105,8 @@ for (const c of document.querySelectorAll('[data-cue]')) {
   });
 }
 $('m-volume').addEventListener('input', () => { settings.volume = +$('m-volume').value; saveSettings(); });
-$('m-test').addEventListener('click', () => { unlockAudio(); chime('finish', settings.volume); });
+$('m-test').addEventListener('click', () => { unlockAudio(); chime('finish', settings.volume, settings.silentTones); });
+$('m-silent').addEventListener('change', () => { settings.silentTones = $('m-silent').checked; saveSettings(); });
 $('m-warmth').addEventListener('change', () => { settings.warmth = $('m-warmth').value; saveSettings(); renderMenu(); });
 $('m-breathe').addEventListener('change', () => { settings.breathe = $('m-breathe').checked; saveSettings(); renderMenu(); });
 $('m-flash').addEventListener('change', () => { settings.flash = $('m-flash').checked; saveSettings(); });

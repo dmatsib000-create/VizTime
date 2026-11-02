@@ -431,6 +431,8 @@ Every button below is a native `<button type="button">` (or `type="submit"` in a
 
 **Description.** The menu: settings for mode, comfort cues, activities and the floating view. A bottom sheet on phones (top corners at `--radius`, square bottom), a centered dialog at 640px and wider. Fades in over `--dur-fade`.
 
+Settings that only one platform can use are hidden elsewhere: system notifications without the Notification API, and "Play tones in Silent mode" except on a touch device with the Audio Session API (`canPlayThroughSilent()` in sound.js). That one carries its cost in its hint, since playback may pause other audio while a tone sounds.
+
 | Part | Use |
 |---|---|
 | `.sheet-head` | 24px serif heading, Close text button, ink rule |
