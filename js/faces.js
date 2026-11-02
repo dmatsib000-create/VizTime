@@ -292,21 +292,26 @@ function drawRuler(ctx, w, h, m, p) {
   }
   ctx.strokeStyle = p.ruleStrong;
   ctx.lineWidth = 1;
-  ctx.strokeRect(x0, y0, L, H);
+  // On half pixels, so the side edges are as crisp as the top and bottom.
+  ctx.strokeRect(x0 + 0.5, y0, Math.round(L) - 1, H);
   ctx.fillStyle = p.ochreInk;
   ctx.fillRect(x1 - 1.5, y0 - 0.5, 1.5, H + 1);
 
-  // Minute marks on real clock times along the top edge, longer each quarter
-  // hour; clock times over the long ones, and the end time in full ink.
+  // Minute marks on real clock times along the top edge. Fine marks are longer
+  // each quarter hour, or each half hour where 2- and 10-minute marks miss
+  // the quarters; coarse ones each hour. Clock times sit over the long marks,
+  // and the end time is in full ink.
   const step = [1, 2, 5, 10, 15, 30, 60, 120].map(x => x * MIN).find(s => m.totalMs / s <= (small ? 6 : 10)) || 240 * MIN;
-  const major = step < 15 * MIN ? 15 * MIN : 60 * MIN;
+  const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+  const lcm = (a, b) => (a / gcd(a, b)) * b;
+  const major = lcm(step, step < 15 * MIN ? 15 * MIN : 60 * MIN);
   const tz = new Date().getTimezoneOffset() * MIN;
   const local = t => t - tz;
   ctx.font = `400 ${labelSize}px ${MONO}`;
   ctx.textBaseline = 'alphabetic';
+  const endText = m.fmtClock(m.endAt);
   let endLabelX = Infinity;
   if (!small) {
-    const endText = m.fmtClock(m.endAt);
     endLabelX = x1 - ctx.measureText(endText).width;
     ctx.fillStyle = p.ink;
     ctx.textAlign = 'right';
@@ -327,7 +332,8 @@ function drawRuler(ctx, w, h, m, p) {
     if (small || !long) continue;
     const text = m.fmtClock(t), half = ctx.measureText(text).width / 2;
     const lx = Math.max(half, x);
-    if (lx - half < lastLabel + 8 || lx + half > endLabelX - 8) continue;
+    // A short session can end in the same clock minute as a long mark.
+    if (text === endText || lx - half < lastLabel + 8 || lx + half > endLabelX - 8) continue;
     ctx.fillText(text, lx, y0 - 11);
     lastLabel = lx + half;
   }
