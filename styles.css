@@ -303,7 +303,13 @@ body[data-mode="simple"] .not-simple { display: none; }
 .run-text .ribbon { margin: var(--s4) 0 0; }
 
 .face-wrap { position: relative; display: flex; justify-content: center; margin: var(--s3) auto; }
-.face { width: min(80vw, 46dvh, 400px); aspect-ratio: 1; display: block; }
+.face { --face-size: min(80vw, 46dvh, 400px); width: var(--face-size); aspect-ratio: 1; display: block; }
+/* The ruler is read by its length, so it takes the whole column. It keeps the square's
+   height, so the dots under it don't move when the picture changes. A phone on its
+   side keeps the square, beside the words. */
+@media not all and (orientation: landscape) and (max-height: 520px) {
+  .face[data-picture="ruler"] { width: 100%; height: var(--face-size); aspect-ratio: auto; }
+}
 .reveal {
   position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%);
   margin: 0; font-size: 13px; color: var(--ink-soft); white-space: nowrap;
@@ -494,17 +500,18 @@ body.pip { padding: var(--s2); height: 100vh; min-height: 0; display: flex; flex
 .pip-row .ctl { min-height: clamp(36px, 13vmin, var(--tap)); min-width: var(--tap); font-size: clamp(13px, 5vmin, 15px); padding: 0 var(--s2); }
 .pip-fig { margin: 0; text-align: center; font-size: clamp(13px, 5vmin, 16px); color: var(--ink-soft); }
 
-/* Wide window: picture on the left, words and buttons on the right. */
+/* Wide window: picture on the left, words and buttons on the right. The ruler is read
+   by its length, so it stays stacked, across the whole window. */
 @media (min-aspect-ratio: 5/4) {
-  body.pip:not(.is-finished) {
+  body.pip:not(.is-finished):not([data-picture="ruler"]) {
     display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
     grid-template-rows: 1fr auto auto auto auto 1fr; column-gap: var(--s3); row-gap: var(--s1);
   }
-  body.pip:not(.is-finished) .pip-face-wrap { grid-column: 1; grid-row: 1 / -1; height: 100%; }
-  body.pip:not(.is-finished) .pip-title { grid-column: 2; grid-row: 2; }
-  body.pip:not(.is-finished) .pip-next { grid-column: 2; grid-row: 3; }
-  body.pip:not(.is-finished) .pip-fig { grid-column: 2; grid-row: 4; text-align: left; }
-  body.pip:not(.is-finished) .pip-controls { grid-column: 2; grid-row: 5; justify-content: flex-start; }
+  body.pip:not(.is-finished):not([data-picture="ruler"]) .pip-face-wrap { grid-column: 1; grid-row: 1 / -1; height: 100%; }
+  body.pip:not(.is-finished):not([data-picture="ruler"]) .pip-title { grid-column: 2; grid-row: 2; }
+  body.pip:not(.is-finished):not([data-picture="ruler"]) .pip-next { grid-column: 2; grid-row: 3; }
+  body.pip:not(.is-finished):not([data-picture="ruler"]) .pip-fig { grid-column: 2; grid-row: 4; text-align: left; }
+  body.pip:not(.is-finished):not([data-picture="ruler"]) .pip-controls { grid-column: 2; grid-row: 5; justify-content: flex-start; }
 }
 /* Short or narrow window: drop the buttons, then the extra lines, before the picture shrinks. */
 @media (max-aspect-ratio: 5/4) and (max-height: 210px), (max-height: 140px), (max-width: 190px) { .pip-controls { display: none; } }

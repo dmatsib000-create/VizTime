@@ -120,6 +120,7 @@ export function renderFloatText(now) {
   face.setAttribute('role', work ? 'button' : 'img');
   if (work) face.tabIndex = 0; else face.removeAttribute('tabindex');
   floatDoc.body.classList.toggle('is-finished', finished);
+  floatDoc.body.dataset.picture = faceName();
   g('pip-face-wrap').hidden = finished;
   g('pip-title').textContent = finished
     ? (work ? 'Session finished.' : 'Finished') : (session.title || (work ? fmtClock(now) : ''));
