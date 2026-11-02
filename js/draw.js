@@ -139,7 +139,7 @@ export function frameGap(now) {
   const tg = targets(now);
   const settling = Math.abs(tg.w - warmth) > 0.002 || Math.abs(tg.z - zoom) > 0.002;
   if (!session || session.finishedAt) return settling ? 80 : 1000;
-  return redrawGap({ totalMs: session.totalMs, stage: E.stage(session, now), paused: !!session.pausedAt }, settling);
+  return redrawGap({ totalMs: session.totalMs, stage: E.stage(session, now), paused: !!session.pausedAt, frac: E.fraction(session, now) }, settling);
 }
 
 // A change on screen (a new picture, a pause, +5) is drawn at once, here and

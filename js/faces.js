@@ -87,15 +87,18 @@ export function clockMarks(from, to, most, tzOffset = new Date(from).getTimezone
   return marks;
 }
 
-// How long the page may wait, in ms, before drawing the picture again. Every
-// face moves at a constant rate, its fastest part at most about 1.5 times its
-// size (up to 640px) over the session, so waiting totalMs / 2000 keeps each
-// step under half a pixel; a long session is drawn about once a second. The
-// last stretch, and the light or zoom settling, are drawn smoothly.
-export function redrawGap({ totalMs, stage, paused }, settling) {
+// How long the page may wait, in ms, before drawing the picture again. Through
+// the middle of a session every face's fastest part moves at most about 1.5
+// times its size (up to 640px) over the session, so waiting totalMs / 2000
+// keeps each step under half a pixel; a long session is drawn about once a
+// second. Near the ends the level (narrow top and bottom of its dial) and the
+// disc (small centre) move much faster, so the first 3% and last 5% of a
+// session are drawn smoothly, as are the warning stage and the light or zoom
+// settling. `frac` is the share of the session left.
+export function redrawGap({ totalMs, stage, paused, frac }, settling) {
   if (settling) return 80;
   if (paused) return 1000;
-  if (stage !== 'running') return 80;
+  if (stage !== 'running' || frac > 0.97 || frac < 0.05) return 80;
   return Math.min(1000, Math.max(80, totalMs / 2000));
 }
 

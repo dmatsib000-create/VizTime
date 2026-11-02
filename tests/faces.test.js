@@ -52,7 +52,7 @@ test('both ends are included when they fall on a mark', () => {
 });
 
 test('a long session is drawn about once a second, a short one smoothly', () => {
-  const running = totalMs => redrawGap({ totalMs, stage: 'running', paused: false }, false);
+  const running = totalMs => redrawGap({ totalMs, stage: 'running', paused: false, frac: 0.5 }, false);
   assert.equal(running(60 * MIN), 1000);
   assert.equal(running(25 * MIN), 750);
   assert.equal(running(5 * MIN), 150);
@@ -60,9 +60,19 @@ test('a long session is drawn about once a second, a short one smoothly', () => 
 });
 
 test('the last stretch and anything settling are drawn smoothly; a pause barely at all', () => {
-  const s = { totalMs: 25 * MIN, stage: 'running', paused: false };
+  const s = { totalMs: 25 * MIN, stage: 'running', paused: false, frac: 0.5 };
   assert.equal(redrawGap({ ...s, stage: 'warning' }, false), 80);
   assert.equal(redrawGap(s, true), 80);
   assert.equal(redrawGap({ ...s, paused: true }, false), 1000);
   assert.equal(redrawGap({ ...s, paused: true }, true), 80);
+});
+
+test('the first 3% and last 5% of a session are drawn smoothly, where the level and disc move fastest', () => {
+  const at = frac => redrawGap({ totalMs: 25 * MIN, stage: 'running', paused: false, frac }, false);
+  assert.equal(at(1), 80);      // just started: the level drops fast across the narrow top of its dial
+  assert.equal(at(0.975), 80);
+  assert.equal(at(0.96), 750);
+  assert.equal(at(0.06), 750);
+  assert.equal(at(0.04), 80);   // with no warning stage, the disc shrinks fast near its centre
+  assert.equal(redrawGap({ totalMs: 25 * MIN, stage: 'running', paused: true, frac: 1 }, false), 1000);
 });
