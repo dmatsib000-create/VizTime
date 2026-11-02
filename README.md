@@ -65,13 +65,13 @@ Then open http://localhost:8000.
 
 ## Tests
 
-The timer model, saved data and the offline file list have tests that use Node's built-in runner, so there is nothing to install. With Node 20 or later:
+The timer model, what the app says about time (including that Work mode only ever says "Session finished." and its tab is always "Day"), saved data and the offline file list have tests that use Node's built-in runner, so there is nothing to install. With Node 20 or later:
 
 ```bash
 node --test
 ```
 
-They also run on every pull request. When adding a file the app needs offline, list it in `SHELL` in `sw.js` and bump `CACHE`; the tests fail if a script or font is missing from the list.
+They also run on every pull request, after a check that every script parses. When adding a file the app needs offline, list it in `SHELL` in `sw.js` and bump `CACHE`; the tests fail if a script or font is missing from the list.
 
 What the platforms allow (floating windows, sound after locking, keeping the screen awake) can only be checked on the devices themselves. [docs/device-tests.md](docs/device-tests.md) lists those tests; they use `check/`, a page that isn't part of the app.
 

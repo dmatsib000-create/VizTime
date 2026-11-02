@@ -5,7 +5,8 @@ import * as E from './engine.js';
 import { load, save, noteKey } from './store.js';
 import { unlockAudio, chime, speak } from './sound.js';
 import { mode, session, setSession, settings, persist } from './state.js';
-import { $, fmtLeft, toast, announce } from './ui.js';
+import { $, toast, announce } from './ui.js';
+import { cueWords, notification } from './words.js';
 import { resetForm } from './setup.js';
 import { render } from './screens.js';
 import { frame } from './draw.js';
@@ -99,47 +100,31 @@ for (const b of document.querySelectorAll('[data-adj]')) {
 $('finish-btn').addEventListener('click', () => {
   if (!session) return;
   E.finishNow(session);
-  announce(cueWords('finish', session));
+  announce(cueWords(mode, 'finish', session, Date.now()));
   onFinished();
 });
 $('stop-btn').addEventListener('click', stopSession);
 
 /* ---------- Cues ---------- */
 
-function cueWords(cue, s) {
-  if (mode === 'work') return cue === 'finish' ? 'Session finished.' : '';
-  const title = s.title;
-  if (cue === 'half') return `Halfway${title ? ` through ${title}` : ''}.`;
-  if (cue === 'warn') return `${fmtLeft(E.remaining(s))} left${title ? ` in ${title}` : ''}.${s.next ? ` Next: ${s.next}.` : ''}`;
-  return `${title ? `${title} is finished.` : 'Finished.'}${s.next ? ` Next: ${s.next}.` : ''}`;
-}
-
+// The words themselves are in words.js, where the tests can check Work mode's.
 export function playCue(cue) {
   const c = settings.cues[cue] || {};
+  const words = cueWords(mode, cue, session, Date.now());
   if (c.sound) chime(cue, settings.volume);
-  if (c.speak) speak(cueWords(cue, session));
-  if (cue !== 'half') announce(cueWords(cue, session) || '');
+  if (c.speak) speak(words);
+  if (cue !== 'half') announce(words || '');
   if (cue !== 'half') notify(cue);
 }
 
 async function notify(cue) {
   if (!settings.notify || !document.hidden || !('Notification' in window) || Notification.permission !== 'granted') return;
-  const s = session;
-  let title, text = '';
-  if (mode === 'work') {
-    if (cue !== 'finish') return;
-    title = 'Session finished.';
-  } else if (cue === 'warn') {
-    title = `${fmtLeft(E.remaining(s))} left${s.title ? ` · ${s.title}` : ''}`;
-    text = s.next ? `Then ${s.next}` : '';
-  } else {
-    title = `${s.title || 'Session'} finished`;
-    text = s.next ? `Next: ${s.next}` : '';
-  }
-  const opts = { body: text, tag: 'viztime', icon: 'icons/icon-192.png', silent: true };
+  const n = notification(mode, cue, session, Date.now());
+  if (!n) return;
+  const opts = { body: n.body, tag: 'viztime', icon: 'icons/icon-192.png', silent: true };
   try {
     const reg = await navigator.serviceWorker?.getRegistration();
-    if (reg) reg.showNotification(title, opts); else new Notification(title, opts);
+    if (reg) reg.showNotification(n.title, opts); else new Notification(n.title, opts);
   } catch { /* notifications are optional */ }
 }
 

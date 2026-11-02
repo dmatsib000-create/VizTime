@@ -1,7 +1,9 @@
 // VizTime: loads every part of the page, then shows the first screen.
 //
 // state.js    settings, the mode and the session, shared by all of these
-// ui.js       element lookup, time wording, the toast, the live region
+// ui.js       element lookup, the toast, the live region
+// words.js    what the app says about time: formats, tab title, cues,
+//             notifications, the picture's label (pure, and tested)
 // setup.js    the setup form, presets and the simple chips
 // session.js  starting, running controls, finishing, stopping, cues, wake lock
 // screens.js  which screen shows, and the running and finish screens
