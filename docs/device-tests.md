@@ -41,6 +41,8 @@ Then add the check page to the Home Screen, open it from there and do the same. 
 
 Repeat with Silent mode on. Then repeat once more, but after unlocking tap **Resume sound** before the tone is due.
 
+**8b. Do tones play in Silent mode?** With Silent mode on and some music playing, tap **Start sound** on the check page: no tone is expected. Then tap **Tone through Silent mode**. Note whether the tone played, whether the music paused, and whether it came back by itself afterwards. Then in VizTime, turn on Menu → Comfort → **Play tones in Silent mode** and tap **Try it**, and let a session reach a cue with the screen on.
+
 **9. Do spoken cues work without a tap?** Open the check app fresh (close it in the app switcher first). Tap **Speak in 10 s, no tap** and wait. Did it speak? The log says "started speaking" if it did. Then tap **Prime speech silently**, then **Speak in 10 s, no tap** again.
 
 **10. Does the screen stay on?** Set Auto-Lock to 1 minute. In the check app, tap **Hold screen awake** and leave the phone untouched for 10 minutes. Do it with Low Power Mode off, then on. A "released" line in the log means it let go.
@@ -63,5 +65,6 @@ Repeat with Silent mode on. Then repeat once more, but after unlocking tap **Res
 | 6 | | | |
 | 7 | 2026-11-01 | iPhone, iOS 27.0.1, Chrome for iOS 152 (a browser tab) | Partly done. "As the app does it" failed twice (NotAllowedError: not triggered by a user activation). "Asking at once" failed three times (InvalidStateError: not ready). "Safari's way" opened 5 out of 5 times, and closing worked. `webkitSupportsPresentationMode` is false on an empty video but true on a playing one, so it can't be used to decide whether to show Float. VizTime now uses Safari's way first. Then in Safari: works in a Safari tab, both on the check page and in VizTime. It doesn't work from the Home Screen, so VizTime hides Float there. Whether the picture keeps moving in another app not tried yet. |
 | 8 | 2026-11-01 | iPhone, iOS 27.0.1, Chrome for iOS 152 | Started only. A tap moved sound from suspended to running. Lock-and-return not tried yet. |
+| 8b | 2026-11-02 | iPhone, Safari and Vivaldi | Silent mode was the reason no tone played anywhere: with it off, **Try it** plays. The playback option itself not tried yet. |
 | 9 | | | |
 | 10 | | | |

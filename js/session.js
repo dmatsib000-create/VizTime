@@ -111,7 +111,7 @@ $('stop-btn').addEventListener('click', stopSession);
 export function playCue(cue) {
   const c = settings.cues[cue] || {};
   const words = cueWords(mode, cue, session, Date.now());
-  if (c.sound) chime(cue, settings.volume);
+  if (c.sound) chime(cue, settings.volume, settings.silentTones);
   if (c.speak) speak(words);
   if (cue !== 'half') announce(words || '');
   if (cue !== 'half') notify(cue);

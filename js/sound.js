@@ -1,6 +1,6 @@
 // Soft tones with a slow attack, never a beep. Built with Web Audio so nothing
-// needs downloading. On iPhone, audio only works after a tap, and the silent
-// switch mutes it.
+// needs downloading. On iPhone, audio only works after a tap, and Silent mode
+// mutes it unless the person turns on "Play tones in Silent mode".
 
 let ctx = null;
 
@@ -38,11 +38,29 @@ const PHRASES = {
   finish: [[392.0, 0], [587.33, 1.1]], // G4 then D5, unhurried
 };
 
-export function chime(kind, volume = 0.6) {
+// iPhone treats Web Audio as ambient sound, which Silent mode mutes. The Audio
+// Session API (iOS 17 and later) lets a page ask to be playback instead, which
+// Silent mode doesn't mute; playback may pause other audio, such as music, so
+// it is asked for only while a phrase sounds, then handed back. Offered only on
+// a touch device with the API: a Mac has no Silent mode.
+export const canPlayThroughSilent = () => 'audioSession' in navigator && navigator.maxTouchPoints > 1;
+let sessionTimer;
+function holdPlayback(seconds) {
+  try {
+    navigator.audioSession.type = 'playback';
+    clearTimeout(sessionTimer);
+    sessionTimer = setTimeout(() => { try { navigator.audioSession.type = 'auto'; } catch { /* best effort */ } }, seconds * 1000);
+  } catch { /* the tones still play when Silent mode is off */ }
+}
+
+export function chime(kind, volume = 0.6, throughSilent = false) {
   if (!ctx || volume <= 0) return;
+  const phrase = PHRASES[kind] || [];
+  // A note lasts its attack and decay (0.6 + 3.2 s) after it starts.
+  if (throughSilent && canPlayThroughSilent()) holdPlayback(Math.max(...phrase.map(([, at]) => at)) + 4.2);
   // iOS can leave the context 'interrupted' after a lock or a call.
   if (ctx.state !== 'running') ctx.resume();
-  for (const [freq, at] of PHRASES[kind] || []) note(freq, at, volume);
+  for (const [freq, at] of phrase) note(freq, at, volume);
 }
 
 export function speak(text) {

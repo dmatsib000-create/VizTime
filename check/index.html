@@ -74,6 +74,7 @@
   <button type="button" id="snd-start">Start sound</button>
   <button type="button" id="snd-later">Tone in 60 s, no tap</button>
   <button type="button" id="snd-resume">Resume sound</button>
+  <button type="button" id="snd-silent">Tone through Silent mode</button>
 </div>
 
 <h2>Speech</h2>
@@ -94,7 +95,7 @@
 <h2>Other</h2>
 <div class="row">
   <button type="button" id="persist">Ask to keep data</button>
-  <button type="button" id="vibrate">Vibrate</button>
+  <button type="button" id="vibrate">Vibrate (Android only)</button>
   <button type="button" id="facts">List this device again</button>
 </div>
 
@@ -345,6 +346,14 @@ function startSound() {
 
 $('snd-start').onclick = () => attempt('start sound (tap)', startSound);
 $('snd-resume').onclick = () => attempt('resume sound (tap)', startSound);
+// As VizTime's "Play tones in Silent mode" does it: playback for the tone, then back to auto.
+$('snd-silent').onclick = () => attempt('tone through Silent mode (tap)', () => {
+  if (!('audioSession' in navigator)) throw new Error('no audioSession in this browser');
+  navigator.audioSession.type = 'playback';
+  const result = startSound();
+  setTimeout(() => { navigator.audioSession.type = 'auto'; note('audio session back to auto'); }, 2500);
+  return `audioSession set to ${navigator.audioSession.type}; ${result}. Was any music paused?`;
+});
 $('snd-later').onclick = () => {
   if (!ctx) return note('tone in 60 s: start sound first');
   note('tone in 60 s: waiting');
