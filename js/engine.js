@@ -61,6 +61,9 @@ export function warnProgress(s, now) {
 
 // When each cue is due, as remaining time.
 const CUE_AT = { half: s => s.totalMs / 2, warn: s => s.warnMs, finish: () => 0 };
+// The same, as a timestamp on the session's own clock. The shells schedule
+// their reminders from it (js/cues.js).
+export const cueTime = (s, cue) => s.endAt - CUE_AT[cue](s);
 
 export function pause(s, now = Date.now()) {
   if (!s.pausedAt && !s.finishedAt) s.pausedAt = now;

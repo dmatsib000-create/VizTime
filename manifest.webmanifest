@@ -1,6 +1,6 @@
 {
-  "name": "VizTime",
-  "short_name": "VizTime",
+  "name": "TimeFall",
+  "short_name": "TimeFall",
   "description": "A calm visual timer for time blindness and transitions.",
   "start_url": "./",
   "scope": "./",

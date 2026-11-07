@@ -1,4 +1,4 @@
-// What VizTime says about time: the time formats, the tab title, the cue that
+// What TimeFall says about time: the time formats, the tab title, the cue that
 // is spoken and announced, the system notification, and the picture's label.
 // Pure, with `now` as a parameter, so tests/words.test.js can hold Work mode to
 // its rule: it never looks like a timer, and the only thing it says is
@@ -28,9 +28,9 @@ export function fmtLeft(ms) {
 // The browser tab. In Work mode it is always "Day", whatever is running.
 export function pageTitle(mode, s, now) {
   if (mode === 'work') return 'Day';
-  if (!s) return 'VizTime';
-  if (s.finishedAt) return 'Finished · VizTime';
-  return `${s.pausedAt ? 'Paused · ' : ''}${fmtLeft(E.remaining(s, now))} · ${s.title || 'VizTime'}`;
+  if (!s) return 'TimeFall';
+  if (s.finishedAt) return 'Finished · TimeFall';
+  return `${s.pausedAt ? 'Paused · ' : ''}${fmtLeft(E.remaining(s, now))} · ${s.title || 'TimeFall'}`;
 }
 
 // Spoken (when turned on) and announced to screen readers. In Work mode only
@@ -45,8 +45,10 @@ export function cueWords(mode, cue, s, now) {
 
 // The system notification at the warning and finish, or null for none. A
 // patient may see it, so Work mode sends only the finish, with nothing else.
+// The phone shells also show the halfway words, when that tone is on.
 export function notification(mode, cue, s, now) {
   if (mode === 'work') return cue === 'finish' ? { title: 'Session finished.', body: '' } : null;
+  if (cue === 'half') return { title: cueWords(mode, 'half', s, now), body: '' };
   if (cue === 'warn') {
     return { title: `${fmtLeft(E.remaining(s, now))} left${s.title ? ` · ${s.title}` : ''}`, body: s.next ? `Then ${s.next}` : '' };
   }

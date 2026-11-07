@@ -7,6 +7,7 @@ import { $, fmtClock, fmtLeft, toast } from './ui.js';
 import { faceLabel } from './screens.js';
 import { tick, lastTick, step, paint, paintVideo, faceModel, faceName, frameGap, paintRequests } from './draw.js';
 import { canFloatWindow, canFloatVideo, openFloatWindow, openFloatVideo } from './float.js';
+import { canFloatNative, floatNative } from './native.js';
 
 export let floatDoc = null;
 let floatWin = null, closeVideo = null, videoTimer = null;
@@ -34,6 +35,8 @@ function paintFloat() {
 
 async function openFloat() {
   if (!session || session.finishedAt) return;
+  // Android's own small window; the page itself shrinks into it.
+  if (canFloatNative()) return floatNative();
   if (floatWin || closeVideo) return closeFloat();
   try {
     if (canFloatWindow()) {
@@ -65,7 +68,7 @@ export function closeFloat() {
 }
 
 export function buildFloat(doc) {
-  doc.title = mode === 'work' ? 'Day' : 'VizTime';
+  doc.title = mode === 'work' ? 'Day' : 'TimeFall';
   doc.documentElement.lang = 'en';
   doc.body.className = 'pip';
   doc.body.innerHTML = `

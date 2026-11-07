@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#EFEAE0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1E1C19" media="(prefers-color-scheme: dark)">
+<meta name="description" content="How to put TimeFall on your phone.">
+<title>Get TimeFall</title>
+<link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  /* This page only: a short, ruled letter. Everything else comes from the app's stylesheet. */
+  .page { max-width: var(--measure); margin: 0 auto; padding-bottom: var(--s8); }
+  .page h1 { margin: var(--s6) 0 var(--s2); font-weight: 400; font-size: clamp(32px, 5vw + 14px, 48px); line-height: 1.1; }
+  .page .lead { margin: 0 0 var(--s6); font-size: 19px; color: var(--ink-soft); }
+  .page h2 { margin: var(--s7) 0 var(--s3); padding-top: var(--s3); border-top: 1px solid var(--ink); font-weight: 400; font-size: 24px; }
+  .page h2 .label { display: block; margin-bottom: var(--s1); }
+  .page ol { margin: 0; padding-left: 1.4em; }
+  .page li { margin: 0 0 var(--s3); }
+  .page li::marker { font-family: var(--mono); font-size: 13px; color: var(--ink-soft); }
+  .page a { color: var(--ink); text-decoration-color: var(--rule-strong); text-underline-offset: 3px; }
+  .page .primary { display: inline-flex; align-items: center; color: var(--paper); text-decoration: none; margin: var(--s2) 0 var(--s4); }
+  .page .primary[hidden] { display: none; }
+  .page .note { margin: var(--s4) 0 0; }
+  .page .soon { font-style: italic; }
+  .page .fine { margin-top: var(--s7); padding-top: var(--s3); border-top: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<main class="page">
+  <p class="label mono">TimeFall</p>
+  <h1>Put TimeFall on your phone</h1>
+  <p class="lead">A calm visual timer for time blindness and transitions. It is free, keeps everything on your own phone, and has no account to make.</p>
+
+  <section id="iphone">
+    <h2><span class="label mono">iPhone</span>Through TestFlight, Apple’s app for trying apps before they are in the store</h2>
+    <ol>
+      <li>Install the free <strong>TestFlight</strong> app from the App Store (it is by Apple).</li>
+      <li>Then, on the phone, open this link: <a class="primary" id="testflight-link" href="#" hidden>Get TimeFall in TestFlight</a><span class="soon" id="testflight-soon">The iPhone link is being set up. Check back here soon.</span></li>
+      <li>In TestFlight, tap <strong>Accept</strong>, then <strong>Install</strong>. TimeFall appears on your Home Screen like any app.</li>
+    </ol>
+    <p class="note hint">TestFlight updates TimeFall on its own. Every three months Apple asks TestFlight to fetch a fresh copy; if TimeFall ever says it has expired, open TestFlight and tap Update.</p>
+  </section>
+
+  <section id="android">
+    <h2><span class="label mono">Android</span>From a download, outside the Play Store</h2>
+    <ol>
+      <li>On the phone, download the app: <a class="primary" href="https://github.com/dmatsib000-create/VizTime/releases/latest/download/TimeFall.apk">Download TimeFall for Android</a></li>
+      <li>Open the downloaded file (from the notification, or your Files app). If the phone says this source isn’t allowed to install apps, tap <strong>Settings</strong> and allow it for your browser or Files app, then go back and try again.</li>
+      <li>Tap <strong>Install</strong>. If Google Play Protect asks about an app it doesn’t know, choose <strong>Install anyway</strong>: it is a small app from a friend, not from a store.</li>
+    </ol>
+    <p class="note hint">When a newer TimeFall exists, the app says so on its first screen, with a link back here. Download the file again and open it: it installs over the old one, and your presets and notes stay.</p>
+  </section>
+
+  <section id="web">
+    <h2><span class="label mono">Any phone or computer</span>Without installing anything</h2>
+    <p>TimeFall also works as a web page: <a href="../">dmatsib000-create.github.io/VizTime</a>. On an iPhone, Safari’s Share button offers <strong>Add to Home Screen</strong>. The web page can’t remind you while the phone is locked; the apps above can.</p>
+    <p class="note hint">Already using the web page? In it, open <strong>Menu → Your data → Copy a code</strong>, then on the same phone tap <strong>Open in the TimeFall app</strong>, and your presets and settings come along.</p>
+  </section>
+
+  <p class="fine hint">Everything you type stays on your phone. TimeFall has no account, no server and no tracking. More in the <a href="../docs/guide.md">guide</a>.</p>
+</main>
+</body>
+</html>

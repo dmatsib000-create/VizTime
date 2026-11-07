@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">TimeFall</string>
+    <string name="title_activity_main">TimeFall</string>
+    <string name="package_name">io.github.dmatsib000create.timefall</string>
+    <string name="custom_url_scheme">timefall</string>
+</resources>

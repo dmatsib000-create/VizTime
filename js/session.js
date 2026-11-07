@@ -2,6 +2,7 @@
 // the cues along the way, and keeping the screen awake meanwhile.
 
 import * as E from './engine.js';
+import { isNative } from './platform.js';
 import { load, save, noteKey } from './store.js';
 import { unlockAudio, chime, speak } from './sound.js';
 import { mode, session, setSession, settings, persist } from './state.js';
@@ -11,6 +12,7 @@ import { resetForm } from './setup.js';
 import { render } from './screens.js';
 import { frame } from './draw.js';
 import { closeFloat } from './pip.js';
+import { askForCues, vibrate, keepAwake, isFloating } from './native.js';
 
 const { MIN } = E;
 
@@ -28,6 +30,7 @@ function rememberLength(opts) {
 
 export function startSession(opts) {
   unlockAudio();
+  askForCues();
   rememberLength(opts);
   $('toast').hidden = true;
   setSession(E.createSession(opts));
@@ -111,14 +114,19 @@ $('stop-btn').addEventListener('click', stopSession);
 export function playCue(cue) {
   const c = settings.cues[cue] || {};
   const words = cueWords(mode, cue, session, Date.now());
-  if (c.sound) chime(cue, settings.volume, settings.silentTones);
-  if (c.speak) speak(words);
+  // In Android's floating window the phone's reminder carries the tone and
+  // the words (js/native.js); the page only draws.
+  const floating = isFloating();
+  if (c.sound && !floating) chime(cue, settings.volume, settings.silentTones);
+  if (settings.vibrate && cue !== 'half' && !floating) vibrate(cue);
+  if (c.speak && !floating) speak(words);
   if (cue !== 'half') announce(words || '');
   if (cue !== 'half') notify(cue);
 }
 
 async function notify(cue) {
-  if (!settings.notify || !document.hidden || !('Notification' in window) || Notification.permission !== 'granted') return;
+  // The shells schedule their reminders ahead of time (js/native.js).
+  if (isNative || !settings.notify || !document.hidden || !('Notification' in window) || Notification.permission !== 'granted') return;
   const n = notification(mode, cue, session, Date.now());
   if (!n) return;
   const opts = { body: n.body, tag: 'viztime', icon: 'icons/icon-192.png', silent: true };
@@ -136,11 +144,14 @@ document.addEventListener('pointerdown', unlockAudio, { passive: true });
 // A change that arrives while a request is still pending runs again after it,
 // so pausing during the request doesn't leave the screen held awake.
 let wakeLock = null, wakeBusy = false, wakeAgain = false;
+const wantWake = () => settings.wake && session && !session.finishedAt && !session.pausedAt && document.visibilityState === 'visible';
 export async function syncWake() {
+  // The shells hold the screen themselves; the web lock below isn't theirs.
+  if (isNative) { keepAwake(wantWake()); return; }
   if (wakeBusy) { wakeAgain = true; return; }
   wakeBusy = true;
   try {
-    const want = () => settings.wake && session && !session.finishedAt && !session.pausedAt && document.visibilityState === 'visible';
+    const want = wantWake;
     if (want() && !wakeLock && 'wakeLock' in navigator) {
       wakeLock = await navigator.wakeLock.request('screen');
       wakeLock.addEventListener('release', () => { wakeLock = null; });

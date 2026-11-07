@@ -10,6 +10,7 @@ import { startSession, endSession, suggestedMinutes, syncWake } from './session.
 import { tick, faceName, faceSetting, requestPaint } from './draw.js';
 import { canFloatWindow, canFloatVideo } from './float.js';
 import { renderFloatText } from './pip.js';
+import { canFloatNative, syncBackgroundCues, setAutoFloat } from './native.js';
 
 const { MIN, MAX_MINUTES } = E;
 
@@ -30,10 +31,13 @@ export function render() {
   renderSetup();
   if (session && !session.finishedAt) renderRun();
   if (session && session.finishedAt) renderLanding();
-  $('float-btn').hidden = !(session && !session.finishedAt && (canFloatWindow() || canFloatVideo()));
+  $('float-btn').hidden = !(session && !session.finishedAt && (canFloatNative() || canFloatWindow() || canFloatVideo()));
   requestPaint();
   tick();
   syncWake();
+  // The phone shells: reminders follow the session, and Android may float on its own.
+  syncBackgroundCues();
+  setAutoFloat(settings.autoFloat && session && !session.finishedAt);
   if (changed) focusScreen(screen);
 }
 

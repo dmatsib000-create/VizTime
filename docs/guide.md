@@ -1,14 +1,14 @@
-# VizTime: a guide for everyone
+# TimeFall: a guide for everyone
 
-This guide explains what VizTime is and how to use it. You don't need any technical knowledge to read it.
+This guide explains what TimeFall is and how to use it. You don't need any technical knowledge to read it.
 
-**Open VizTime:** https://dmatsib000-create.github.io/VizTime/
+**Open TimeFall:** https://dmatsib000-create.github.io/VizTime/ · **Get the phone app:** https://dmatsib000-create.github.io/VizTime/install/
 
 ## What it is, and who it's for
 
-VizTime is a timer for people who lose track of time, and for whom stopping one thing to start the next is hard. That often comes with ADHD or autism, but not only.
+TimeFall is a timer for people who lose track of time, and for whom stopping one thing to start the next is hard. That often comes with ADHD or autism, but not only.
 
-An ordinary timer shows numbers counting down and then rings an alarm. For many people the numbers don't register, and the alarm is a jolt, not a help. VizTime works differently:
+An ordinary timer shows numbers counting down and then rings an alarm. For many people the numbers don't register, and the alarm is a jolt, not a help. TimeFall works differently:
 
 - **You see time instead of reading it.** A shape shrinks as time passes, so a glance tells you roughly how much is left.
 - **The end never comes as a surprise.** As the end gets close, the whole screen warms slightly, like late-afternoon light. You notice it without being startled.
@@ -18,9 +18,13 @@ It's calm on purpose: muted paper colours, no alarms, no scores and no cheerful 
 
 ## Getting it on your phone or computer
 
-VizTime runs in a web browser, but you can add it to your phone like an app. You don't need an app store or an account.
+There are two ways to have TimeFall on a phone, and neither needs an account.
 
-**iPhone**
+**The TimeFall app** (iPhone and Android) is the best one: it can remind you with a soft tone while your phone is locked or you're in another app, it can vibrate, it keeps the screen on, and on Android it can float in a small window over other apps. The steps are on one page: https://dmatsib000-create.github.io/VizTime/install/ (iPhone: through Apple's TestFlight app; Android: a download).
+
+**The web page** works on any phone or computer and needs nothing installed. It can't remind you while the phone is locked.
+
+**iPhone, the web page**
 1. Open the address above in **Safari**.
 2. Tap the **Share** button (the square with an arrow pointing up).
 3. Tap **Add to Home Screen**, then **Add**.
@@ -34,7 +38,7 @@ It now has its own icon, opens full screen, and works without an internet connec
 <img src="images/full-setup.png" alt="The setup screen, filled in: Write the quarterly report, then Lunch, with 45 minutes chosen" width="260" align="right">
 
 1. **Say what this time is for**, for example "Write the quarterly report". This is optional, but it helps.
-2. **Say what comes next**, for example "Lunch". Also optional, and very useful: VizTime keeps it in view.
+2. **Say what comes next**, for example "Lunch". Also optional, and very useful: TimeFall keeps it in view.
 3. **Add a first small step for next** if you like, for example "Pick a place to eat". A tiny first step makes starting the next thing easier.
 4. **Choose how long.**
    - **For**: tap a length (5 to 60 minutes) or type your own.
@@ -66,7 +70,7 @@ If you left a note last time you did this activity, it appears as a bookmark rib
 | **Finish now** | Ends early and goes straight to "what's next". Nothing is lost. |
 | **Stop** | Throws this session away and returns to a blank setup. **Undo** appears for 10 seconds in case it was a mistake, and stays while you point at it. |
 
-You can close VizTime or switch off your phone and come back later. It picks up where it should be, because it remembers when the session ends, not how many seconds were left.
+You can close TimeFall or switch off your phone and come back later. It picks up where it should be, because it remembers when the session ends, not how many seconds were left.
 
 <br clear="right">
 
@@ -74,7 +78,7 @@ You can close VizTime or switch off your phone and come back later. It picks up 
 
 <img src="images/full-warning.png" alt="Three minutes left: the disc is small and a card for Lunch fills the lower screen" width="260" align="right">
 
-A few minutes before the end (about 15% of the session, between 2 and 10 minutes), VizTime moves into its **getting close** stage:
+A few minutes before the end (about 15% of the session, between 2 and 10 minutes), TimeFall moves into its **getting close** stage:
 
 - The whole screen warms slightly. This is the main signal, and you can notice it out of the corner of your eye.
 - A card for what comes next appears and slowly fills as the end approaches, with the first small step on it.
@@ -102,7 +106,7 @@ Nothing here tells you that you were late or stopped early. Stopping early and r
 
 ## The three modes
 
-Switch between them with **Full · Work · Simple** at the top of the screen. Switching never interrupts a running session. To choose which mode VizTime opens in, go to **Menu → Mode → Open in**.
+Switch between them with **Full · Work · Simple** at the top of the screen. Switching never interrupts a running session. To choose which mode TimeFall opens in, go to **Menu → Mode → Open in**.
 
 ### Full: everything
 
@@ -146,37 +150,45 @@ Open **Menu → Comfort**. Three one-tap choices set everything at once:
 
 **Adjust each cue** lets you set each one yourself: a bell or a spoken line at halfway, at the warning and at the finish, plus volume, how strong the warm light is, three slow flashes, and whether the screen stays awake. The bells are soft and fade in slowly; there is never a harsh beep.
 
-In Work mode, VizTime never speaks or sends notices about anything except "Session finished."
+In the TimeFall app there are two more. **Vibrate at the warning and the finish** is off until you turn it on. **Reminders while TimeFall is in the background** is on from the start: when the phone is locked or you're in another app, each cue you have turned on arrives as a soft tone and a line on the lock screen, at its exact moment. If a cue's moment passed while the app was closed, it is never played late. The first time you start a session, the phone asks whether TimeFall may send notifications; say yes for the reminders to work.
+
+In Work mode, TimeFall never speaks or sends notices about anything except "Session finished."
 
 ## Keeping it on screen while you do other things
 
 On a computer, tap **Float** to open a small window that stays on top of everything else. It shows the picture and a few buttons, and at the end it offers the same "what's next" choices. This works in Chrome, Edge and Vivaldi on a computer.
 
-On an iPhone, **Float** works only when VizTime is open in Safari, not from the Home Screen, because Apple doesn't support it in home-screen apps yet. In Safari it shows the picture as a small floating video over other apps. You can't tap it, and the iPhone may freeze it while you're in another app. Treat it as an experiment.
+In the Android app, **Float** shrinks TimeFall into a small window that stays over whatever else you do, showing the picture and what comes next; tap it to come back. **Menu → Floating view** can make it float on its own whenever you leave the app during a session.
+
+The iPhone app has no floating window, because iOS only allows one for video. It keeps the screen on while a session runs, and its reminders reach the Lock Screen. On an iPhone, the web page's **Float** works only when TimeFall is open in Safari, not from the Home Screen, because Apple doesn't support it in home-screen apps yet. In Safari it shows the picture as a small floating video over other apps. You can't tap it, and the iPhone may freeze it while you're in another app. Treat it as an experiment.
 
 ## What works where
 
-| | iPhone (added to home screen) | Computer (Chrome, Edge or Vivaldi) |
-|---|---|---|
-| The timer, all three modes | Yes | Yes |
-| Works without internet | Yes, after the first visit | Yes, after the first visit |
-| Sounds | Only while VizTime is open on screen, and only after you've tapped something. Silent mode mutes them, unless you turn on **Play tones in Silent mode** in Menu → Comfort. | Yes |
-| Keeping the screen awake | Yes (on by default during a session) | Yes |
-| Reminders when you're in another app | No | Yes, if you turn on **System notification** in Menu |
-| Vibration | No | No |
-| Floating window | No (only in a Safari tab, experimental, can't be tapped) | Yes |
+| | TimeFall app on iPhone | TimeFall app on Android | iPhone web page (added to home screen) | Computer (Chrome, Edge or Vivaldi) |
+|---|---|---|---|---|
+| The timer, all three modes | Yes | Yes | Yes | Yes |
+| Works without internet | Yes | Yes | Yes, after the first visit | Yes, after the first visit |
+| Sounds while TimeFall is open | Yes. Silent mode mutes them unless **Play tones in Silent mode** is on. | Yes | Only after you've tapped something, and Silent mode mutes them unless **Play tones in Silent mode** is on. | Yes |
+| Reminders when the phone is locked or you're in another app | Yes, a soft tone and a line on the Lock Screen (Silent mode and Focus apply to them as to any app) | Yes | No | Yes, if you turn on **System notification** in Menu |
+| Keeping the screen awake | Yes (on by default during a session) | Yes | Yes, on iOS 18.4 and later | Yes |
+| Vibration | Yes, if you turn it on | Yes, if you turn it on | No | No |
+| Floating window | No | Yes | No (only in a Safari tab, experimental, can't be tapped) | Yes |
 
-**Why the iPhone can do less:** an iPhone pauses web apps as soon as they're off screen or the phone locks, so VizTime can't play a sound then. That's an Apple rule that VizTime can't get around. The best approach on an iPhone is to leave VizTime open on screen; the screen stays awake by default while a session runs. Because of this, the picture and the warming light are designed to do the whole job without sound.
+**Why the web page can do less on a phone:** a phone pauses web pages as soon as they're off screen or the phone locks, so the page can't play a sound then. That's a rule of the phone that a web page can't get around, and it is why the TimeFall app exists. If you use the web page, leave it open on screen; the screen stays awake by default while a session runs. The picture and the warming light are designed to do the whole job without sound.
 
 ## Your information
 
 Everything you type stays on your device, in the browser you use. There is no account, nothing is sent anywhere, and nobody else can see it.
 
 This also means:
-- **Your phone and your computer don't share anything.** A preset you save on your phone won't appear on your computer.
+- **Your phone and your computer don't share anything.** A preset you save on your phone won't appear on your computer. The TimeFall app and the web page on the same phone don't share anything either.
 - **Clearing your browser's data** (history, cookies or website data) erases your presets, notes and settings.
 
-VizTime saves only what you ask it to: your settings, presets, the current session, and your "where you left off" notes. It remembers how long each activity usually runs only if you turn that on (**Menu → Activities**), and **Forget saved lengths** clears it.
+To carry them across, or to keep a copy: **Menu → Your data → Copy a code** makes a block of text with your settings, presets, notes and saved lengths. Paste it into the same place on the other device and choose **Bring in a pasted code**. On a phone, the web page also offers **Open in the TimeFall app**, which carries the code across in one tap. The code is only text; nothing is sent anywhere unless you send it.
+
+The Android app checks once a day whether a newer TimeFall exists and, if so, says so in one line on the first screen. That check sends nothing about you or your phone.
+
+TimeFall saves only what you ask it to: your settings, presets, the current session, and your "where you left off" notes. It remembers how long each activity usually runs only if you turn that on (**Menu → Activities**), and **Forget saved lengths** clears it.
 
 ## Common questions
 
@@ -184,9 +196,9 @@ VizTime saves only what you ask it to: your settings, presets, the current sessi
 
 **I set the wrong length.** Use **−5**, **−1**, **+1** or **+5** while it runs. Taking off more than is left simply finishes it, quietly.
 
-**I didn't hear anything at the end.** Check **Menu → Comfort**: Quiet has no sounds. On an iPhone, Silent mode mutes the bell: turn Silent mode off, or turn on **Play tones in Silent mode** in Menu → Comfort (music or a podcast may pause while the bell plays). Keep VizTime open on screen, and tap the screen once after opening it, because iPhones only allow sound after a tap.
+**I didn't hear anything at the end.** Check **Menu → Comfort**: Quiet has no sounds. On an iPhone, Silent mode mutes the bell: turn Silent mode off, or turn on **Play tones in Silent mode** in Menu → Comfort (music or a podcast may pause while the bell plays). Keep TimeFall open on screen, and tap the screen once after opening it, because iPhones only allow sound after a tap.
 
-**The end passed while VizTime was closed.** When you reopen it, it goes straight to the finish screen. It doesn't play old sounds late.
+**The end passed while TimeFall was closed.** When you reopen it, it goes straight to the finish screen. It doesn't play old sounds late.
 
 **I can't find the buttons in Work mode.** Tap **Edit**.
 
@@ -194,8 +206,14 @@ VizTime saves only what you ask it to: your settings, presets, the current sessi
 
 **How do I switch modes from the keyboard?** **Alt+1** for Full, **Alt+2** for Work, **Alt+3** for Simple.
 
+**I have the app now. How do I get my presets from the web page?** On the phone, open the web page, then **Menu → Your data → Copy a code**, then **Open in the TimeFall app**. On a computer, copy the code and paste it into the app's **Menu → Your data**.
+
+**The app didn't remind me while my phone was locked.** Check **Menu → Comfort → Reminders while TimeFall is in the background** is on, and that the phone allows TimeFall to send notifications (the phone's Settings). On an iPhone, Silent mode and Focus mute notification sounds as they do for any app. On Android, the menu will say if exact timing has been turned off for TimeFall.
+
+**The Android app says a newer TimeFall is ready.** Tap **Get it**, download the file again and open it. It installs over the old one; your presets and notes stay.
+
 ## More detail
 
 - [README.md](../README.md): a shorter summary of every feature, and how the app is published.
-- [build-prompt.md](../build-prompt.md): the original description of what VizTime needs to do and why, written by the person it was made for.
+- [build-prompt.md](../build-prompt.md): the original description of what TimeFall needs to do and why, written by the person it was made for.
 - [design-direction.md](../design-direction.md): why it looks the way it does.

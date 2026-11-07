@@ -73,13 +73,13 @@ test('Work mode: nothing it says holds a number or a timer word', () => {
 
 test('Full mode: the tab shows the time left and the title', () => {
   const s = E.createSession({ title: 'Notes', next: 'Lunch', totalMs: 25 * MIN }, T0);
-  assert.equal(W.pageTitle('full', null, T0), 'VizTime');
+  assert.equal(W.pageTitle('full', null, T0), 'TimeFall');
   assert.equal(W.pageTitle('full', s, T0 + 10 * MIN), '15 min · Notes');
-  assert.equal(W.pageTitle('simple', E.createSession({ totalMs: 25 * MIN }, T0), T0 + 10 * MIN), '15 min · VizTime');
+  assert.equal(W.pageTitle('simple', E.createSession({ totalMs: 25 * MIN }, T0), T0 + 10 * MIN), '15 min · TimeFall');
   E.pause(s, T0 + 10 * MIN);
   assert.equal(W.pageTitle('full', s, T0 + 12 * MIN), 'Paused · 15 min · Notes');
   E.finishNow(s, T0 + 13 * MIN);
-  assert.equal(W.pageTitle('full', s, T0 + 14 * MIN), 'Finished · VizTime');
+  assert.equal(W.pageTitle('full', s, T0 + 14 * MIN), 'Finished · TimeFall');
 });
 
 test('Full mode: cues name the time left, the activity and what comes next', () => {
@@ -92,8 +92,9 @@ test('Full mode: cues name the time left, the activity and what comes next', () 
   assert.equal(W.cueWords('full', 'finish', bare, T0), 'Finished.');
 });
 
-test('Full mode: notifications at the warning and the finish', () => {
+test('Full mode: notifications at the warning and the finish, and halfway for the phone', () => {
   const s = E.createSession({ title: 'Notes', next: 'Lunch', totalMs: 25 * MIN }, T0);
+  assert.deepEqual(W.notification('full', 'half', s, T0 + 12.5 * MIN), { title: 'Halfway through Notes.', body: '' });
   assert.deepEqual(W.notification('full', 'warn', s, T0 + 22 * MIN), { title: '3 min left · Notes', body: 'Then Lunch' });
   assert.deepEqual(W.notification('full', 'finish', s, T0 + 25 * MIN), { title: 'Notes finished', body: 'Next: Lunch' });
   assert.deepEqual(W.notification('full', 'finish', E.createSession({ totalMs: MIN }, T0), T0), { title: 'Session finished', body: '' });

@@ -1,0 +1,25 @@
+{
+  "name": "timefall-native",
+  "private": true,
+  "description": "The iPhone and Android shells for TimeFall, built with Capacitor. The web app itself (one folder up) has no dependencies; everything here is only for the native builds.",
+  "type": "module",
+  "scripts": {
+    "collect": "node scripts/collect-web.mjs",
+    "sync": "node scripts/collect-web.mjs && cap sync",
+    "icons": "node scripts/make-icons.mjs && capacitor-assets generate --iconBackgroundColor #EFEAE0 --iconBackgroundColorDark #1E1C19 --splashBackgroundColor #EFEAE0 --splashBackgroundColorDark #1E1C19",
+    "sounds": "node scripts/make-sounds.mjs"
+  },
+  "dependencies": {
+    "@capacitor-community/keep-awake": "^8.0.1",
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.6.0",
+    "@capacitor/local-notifications": "^8.3.1"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.0"
+  }
+}

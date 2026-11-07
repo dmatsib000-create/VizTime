@@ -1,0 +1,8 @@
+# The native shells' tooling and their generated copies of the web app
+# (native/README.md). The web app itself has no dependencies.
+native/node_modules/
+native/www/
+native/android/app/release/
+*.jks
+*.keystore
+.DS_Store

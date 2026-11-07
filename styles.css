@@ -1,4 +1,4 @@
-/* VizTime: "Afternoon paper". See design-direction.md for the reasoning.
+/* TimeFall: "Afternoon paper". See design-direction.md for the reasoning.
    Ochre means time and nothing else: it never appears on controls. */
 
 @font-face { font-family: Newsreader; font-style: normal; font-weight: 400 500; font-display: swap;
@@ -88,8 +88,8 @@ body {
     max(var(--s4), env(safe-area-inset-left));
 }
 
-button, input, select { font: inherit; color: inherit; }
-input { -webkit-user-select: text; user-select: text; }
+button, input, select, textarea { font: inherit; color: inherit; }
+input, textarea { -webkit-user-select: text; user-select: text; }
 button { cursor: pointer; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
 [hidden] { display: none !important; }
 [tabindex="-1"]:focus { outline: none; }
@@ -530,3 +530,38 @@ body.pip { padding: var(--s2); height: 100vh; min-height: 0; display: flex; flex
   .light.flash { animation: flash-soft 4s ease-in-out 3 !important; }
 }
 @keyframes flash-soft { 50% { opacity: 0.35; } }
+
+/* ---------- The phone shells (native/) ---------- */
+/* Your data: the code that carries presets and settings between devices. */
+.data-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s5); }
+a.text-btn { display: inline-flex; align-items: center; }
+.code-box {
+  display: block; width: 100%; min-height: 72px; margin: var(--s3) 0 var(--s1); padding: var(--s2);
+  resize: vertical; font-size: 12px; line-height: 1.4; overflow-wrap: anywhere;
+  background: var(--paper-raised); border: 1px solid var(--rule-strong); border-radius: var(--radius);
+}
+.code-box:focus { border-color: var(--ink-soft); }
+
+/* Android: a newer build is ready. One quiet line under the setup screen. */
+.update-note { max-width: var(--measure); margin: var(--s6) auto 0; text-align: center; }
+.update-note a { color: var(--ink); }
+body:not([data-screen="setup"]) .update-note { display: none !important; }
+
+/* Android's floating window: the whole page in a small window over other apps,
+   so only the picture and the words that matter are kept. */
+body.is-floating { padding: var(--s2) var(--s3); min-height: 100dvh; overflow: hidden; }
+body.is-floating .bar, body.is-floating .toast, body.is-floating .controls, body.is-floating .figures,
+body.is-floating .faces-switch, body.is-floating .next-card, body.is-floating .work-tools, body.is-floating #leave-note,
+body.is-floating .ribbon, body.is-floating .work-time, body.is-floating .run-kind, body.is-floating .update-note,
+body.is-floating .landing-start, body.is-floating #l-note, body.is-floating .landing-more, body.is-floating .landing-step,
+body.is-floating .reveal { display: none !important; }
+body.is-floating .run-text { margin-bottom: var(--s1); }
+body.is-floating .run-title { font-size: 17px; line-height: 1.2; -webkit-line-clamp: 1; }
+body.is-floating .run-next { margin: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.is-floating .face-wrap { margin: var(--s1) auto; }
+body.is-floating .face { --face-size: min(100%, 58dvh); }
+body.is-floating .schedule { border-top: 0; }
+body.is-floating .sched-row { padding: var(--s1) 0; grid-template-columns: 4.5em minmax(0, 1fr); }
+body.is-floating .sched-what { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.is-floating .landing { padding-top: var(--s2); }
+body.is-floating .landing-title { font-size: 24px; }

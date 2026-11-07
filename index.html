@@ -9,9 +9,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="VizTime">
+<meta name="apple-mobile-web-app-title" content="TimeFall">
 <meta name="description" content="A calm visual timer for time blindness and transitions.">
-<title>VizTime</title>
+<title>TimeFall</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -265,6 +265,9 @@
 
     <button type="button" class="ctl done-btn" id="l-done">Done</button>
   </section>
+
+  <!-- Android app only: a newer build is ready to install (js/native.js) -->
+  <p class="hint mono update-note" id="update-note" hidden></p>
 </main>
 
 <!-- ===== Menu ===== -->
@@ -312,7 +315,10 @@
         <label class="check"><input type="checkbox" id="m-breathe"> <span>Slow breathing light at the finish</span></label>
         <label class="check"><input type="checkbox" id="m-flash"> <span>Three slow flashes at the finish</span></label>
         <label class="check"><input type="checkbox" id="m-wake"> <span>Keep the screen awake while running</span></label>
-        <label class="check" id="m-notify-wrap"><input type="checkbox" id="m-notify"> <span>System notification at the warning and finish (computer)</span></label>
+        <label class="check" id="m-vibrate-wrap" hidden><input type="checkbox" id="m-vibrate"> <span>Vibrate at the warning and the finish</span></label>
+        <label class="check" id="m-notify-wrap"><input type="checkbox" id="m-notify" aria-describedby="m-notify-hint"> <span id="m-notify-label">System notification at the warning and finish (computer)</span></label>
+        <p class="hint" id="m-notify-hint" hidden></p>
+        <p class="hint" id="m-exact-wrap" hidden>Exact timing is off for TimeFall in Android’s settings, so reminders may arrive a few minutes late. <button type="button" class="text-btn mono" id="m-exact">Open the setting</button></p>
         <p class="hint">In Work mode, voice and notifications say only “Session finished.”</p>
       </details>
     </section>
@@ -327,6 +333,20 @@
     <section class="sheet-section" id="m-float-section">
       <h3 class="label mono">Floating view</h3>
       <p class="hint" id="m-float-hint"></p>
+      <label class="check" id="m-autofloat-wrap" hidden><input type="checkbox" id="m-autofloat"> <span>Float on its own when you leave TimeFall during a session</span></label>
+    </section>
+
+    <section class="sheet-section" id="m-data-section">
+      <h3 class="label mono">Your data</h3>
+      <p class="hint" id="m-data-hint"></p>
+      <div class="data-actions">
+        <button type="button" class="text-btn mono" id="m-copy">Copy a code</button>
+        <a class="text-btn mono" id="m-open-app" href="#" hidden>Open in the TimeFall app</a>
+      </div>
+      <textarea class="code-box mono" id="m-code" rows="3" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Code"></textarea>
+      <button type="button" class="text-btn mono" id="m-paste">Bring in a pasted code</button>
+      <p class="hint mono" id="m-data-saved" aria-live="polite"></p>
+      <p class="hint mono" id="m-about"></p>
     </section>
   </form>
 </dialog>

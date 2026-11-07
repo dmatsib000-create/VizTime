@@ -1,8 +1,8 @@
-# VizTime
+# TimeFall
 
-A calm visual timer for time blindness and transitions. Plain static files that install to a phone home screen and work offline. The look ("Afternoon paper") is described in [design-direction.md](design-direction.md) and documented as built in [design-system.md](design-system.md); the requirements are in [build-prompt.md](build-prompt.md).
+A calm visual timer for time blindness and transitions. Plain static files that install to a phone home screen and work offline, and, from the same files, an iPhone app and an Android app (see [The phone apps](#the-phone-apps)). The repository keeps its first name, VizTime, so the web address and the saved data stay where they are. The look ("Afternoon paper") is described in [design-direction.md](design-direction.md) and documented as built in [design-system.md](design-system.md); the requirements are in [build-prompt.md](build-prompt.md).
 
-New to VizTime, or not technical? Start with the [plain-language guide](docs/guide.md), with pictures of every screen.
+New to TimeFall, or not technical? Start with the [plain-language guide](docs/guide.md), with pictures of every screen.
 
 ## Three modes
 
@@ -34,22 +34,27 @@ Switch modes with **Full · Work · Simple** at the top of the screen, or **Alt+
 
 ## Comfort
 
-**Quiet**, **Balanced** and **Noticeable** set everything at once. Under "Adjust each cue": a tone and a spoken line per moment (halfway, warning, finish), volume, light strength, a slow breathing light, three slow flashes, keeping the screen awake, system notifications on a computer, and on iPhone, playing tones in Silent mode. Tones are soft bells with a slow attack. Work mode never speaks or notifies about anything except "Session finished."
+**Quiet**, **Balanced** and **Noticeable** set everything at once. Under "Adjust each cue": a tone and a spoken line per moment (halfway, warning, finish), volume, light strength, a slow breathing light, three slow flashes, keeping the screen awake, system notifications on a computer, and on iPhone, playing tones in Silent mode. In the phone apps there are two more: vibration at the warning and the finish (off until turned on), and reminders while TimeFall is in the background (on by default), which reach the lock screen as a soft tone and a line at each cue that is turned on. Tones are soft bells with a slow attack. Work mode never speaks or notifies about anything except "Session finished."
 
 Sessions are stored as timestamps, so a running session survives closing and reopening the app. A cue whose moment passed while the app was closed is never played late.
 
 ## Floating view
 
 - **Chrome, Edge or Vivaldi on a computer:** **Float** opens a small always-on-top window with the picture and −5, Pause, +5. Its layout follows the window's shape: side by side when wide, picture-first when small. At the finish it offers the same handoff as the main screen (Start the next activity, +5 min, Done). In Work mode it shows only the picture and the next entry, and the picture reveals the time left on a tap or Enter.
-- **iPhone and Safari:** in a Safari tab, **Float** shows the picture as a picture-in-picture video above other apps. It can't be tapped, and iOS may freeze it while VizTime is in the background. This is experimental. Apple doesn't support picture-in-picture in home-screen apps yet, so **Float** isn't shown when VizTime is opened from the Home Screen.
+- **Android app:** **Float** shrinks the whole app into a small window that stays over other apps, with the picture and what comes next; Menu → Floating view can make it float on its own whenever you leave the app during a session. The iPhone app has no floating window (iOS allows none except for video); it keeps the screen awake instead.
+- **iPhone and Safari:** in a Safari tab, **Float** shows the picture as a picture-in-picture video above other apps. It can't be tapped, and iOS may freeze it while TimeFall is in the background. This is experimental. Apple doesn't support picture-in-picture in home-screen apps yet, so **Float** isn't shown when TimeFall is opened from the Home Screen.
 
-## Limits on iPhone
+## The phone apps
 
-A home-screen web app is suspended when it isn't on screen or the phone locks, so it can't sound a cue then. Keep the screen awake (on by default while a session runs) and leave VizTime open. Sound only works after a tap, and Silent mode mutes it unless **Play tones in Silent mode** is on (Menu → Comfort, iOS 17 and later). That option asks iOS to treat the tone as playback while it sounds, which may pause music or a podcast meanwhile; it is off by default because Silent mode is often on for a reason. Web apps on iPhone can't vibrate, in any browser. Notifications aren't available without a server.
+The same page, inside a real iPhone app and a real Android app built with Capacitor from [native/](native/README.md), by GitHub Actions, on every change to `main`. Friends install them from one page, [install/](install/index.html): iPhone through TestFlight, Android from a download. What they add over the web version: reminders at the warning and the finish while the phone is locked or the app is out of sight (scheduled from the session's timestamps when the app goes to the background, cancelled when it returns, never late; Work mode schedules only "Session finished."), vibration, the screen kept awake, Android's floating window, and tones without a first tap. Menu → Your data makes a code that carries presets, notes and settings to the app, or keeps a copy; on a phone the web page offers to open it in the app in one tap. The Android app says, in one line on the setup screen, when a newer build is ready. The decisions, prices and limits are in [docs/research/2026-11-07-timefall-native-apps.md](docs/research/2026-11-07-timefall-native-apps.md); the state of the work is in [docs/timefall-progress.md](docs/timefall-progress.md).
+
+## Limits of the web version on iPhone
+
+A home-screen web app is suspended when it isn't on screen or the phone locks, so it can't sound a cue then. The iPhone app above lifts these limits, except the floating view. Keep the screen awake (on by default while a session runs) and leave TimeFall open. Sound only works after a tap, and Silent mode mutes it unless **Play tones in Silent mode** is on (Menu → Comfort, iOS 17 and later). That option asks iOS to treat the tone as playback while it sounds, which may pause music or a podcast meanwhile; it is off by default because Silent mode is often on for a reason. Web apps on iPhone can't vibrate, in any browser. Notifications aren't available without a server.
 
 ## Install
 
-Static files at the repository root: `index.html`, `styles.css`, `js/`, `fonts/`, `icons/`, `manifest.webmanifest`, `sw.js`.
+The apps: [install/](install/index.html). The web version is static files at the repository root: `index.html`, `styles.css`, `js/`, `fonts/`, `icons/`, `manifest.webmanifest`, `sw.js`.
 
 1. GitHub repository **Settings → Pages → Build and deployment**: Source "Deploy from a branch", choose the branch and `/ (root)`.
 2. Open the published address on your phone.
@@ -65,13 +70,13 @@ Then open http://localhost:8000.
 
 ## Tests
 
-The timer model, what the app says about time (including that Work mode only ever says "Session finished." and its tab is always "Day"), the faces' clock marks and how often they are drawn, saved data and the offline file list have tests that use Node's built-in runner, so there is nothing to install. With Node 20 or later:
+The timer model, what the app says about time (including that Work mode only ever says "Session finished." and its tab is always "Day"), the reminders a phone schedules (including that Work mode schedules only "Session finished."), the faces' clock marks and how often they are drawn, saved data and the codes that carry it, and the offline file list have tests that use Node's built-in runner, so there is nothing to install. With Node 20 or later:
 
 ```bash
 node --test
 ```
 
-They also run on every pull request, after a check that every script parses. When adding a file the app needs offline, list it in `SHELL` in `sw.js` and bump `CACHE`; the tests fail if a script or font is missing from the list.
+They also run on every pull request, after a check that every script parses; the two app workflows build the shells on pull requests too. When adding a file the app needs offline, list it in `SHELL` in `sw.js` and bump `CACHE`; the tests fail if a script or font is missing from the list.
 
 What the platforms allow (floating windows, sound after locking, keeping the screen awake) can only be checked on the devices themselves. [docs/device-tests.md](docs/device-tests.md) lists those tests; they use `check/`, a page that isn't part of the app.
 
