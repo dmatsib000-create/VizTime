@@ -12,8 +12,8 @@ The running record of turning VizTime into the TimeFall phone apps. Decisions an
 | Native shells in `native/` (Capacitor 8), icons, reminder tones | Done | |
 | Reminders while locked, vibration, screen awake, Android floating window, data codes | Built, tests pass | A real phone: the owner's iPhone, a friend's Android |
 | Android signing key made and stored in repository secrets | Done | |
-| Android build and release workflow | Written; first run after merge | The pull request merging |
-| iPhone build and TestFlight workflow | Written; compiles on CI without Apple secrets; upload untested | Apple Developer enrollment, then the App Store Connect app record and API key |
+| Android build and release workflow | Done: the first release, `android-v1.0.7`, was built, signed and published on 7 November 2026, and the install page's download link serves it | |
+| iPhone build and TestFlight workflow | Written; the compile check passed on CI (Xcode 26.6); the signed upload is untested until the Apple secrets exist | Apple Developer enrollment, then the App Store Connect app record and API key |
 | Install page at `/install/` | Done, iPhone link pending | The TestFlight public link |
 | Docs: README, guide, design system, CLAUDE.md | Done | |
 | Apple Developer Program enrollment | Not started | **Owner** (US$99 a year, one to several days to approve) |
