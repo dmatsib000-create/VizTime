@@ -87,7 +87,9 @@ jobs:
           TIMEFALL_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           TIMEFALL_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           TIMEFALL_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew assembleRelease --no-daemon
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
 
       - name: Name the file
         run: |
