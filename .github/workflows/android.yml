@@ -1,0 +1,116 @@
+# The Android app: built from the web app and the shell in native/android on
+# every change to either, signed with the key in the repository's secrets, and
+# published as a GitHub release whose latest APK the install page links to.
+# A pull request builds without signing, to prove the shell still compiles.
+name: Android app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'styles.css'
+      - 'sw.js'
+      - 'manifest.webmanifest'
+      - 'js/**'
+      - 'fonts/**'
+      - 'icons/**'
+      - 'native/**'
+      - '!native/ios/**'
+      - '.github/workflows/android.yml'
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'styles.css'
+      - 'sw.js'
+      - 'manifest.webmanifest'
+      - 'js/**'
+      - 'fonts/**'
+      - 'icons/**'
+      - 'native/**'
+      - '!native/ios/**'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and publish the APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # The run number only ever grows, so each build installs over the last.
+      TIMEFALL_BUILD: ${{ github.run_number }}
+      TIMEFALL_VERSION: 1.0.${{ github.run_number }}
+      HAS_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: native/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Install the shell's tooling
+        run: npm ci
+        working-directory: native
+
+      - name: Gather the web app into the shell
+        run: npm run sync -- android
+        working-directory: native
+
+      - name: Unpack the signing key
+        if: env.HAS_KEY == 'true' && github.event_name != 'pull_request'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/timefall-release.jks"
+          echo "TIMEFALL_KEYSTORE=$RUNNER_TEMP/timefall-release.jks" >> "$GITHUB_ENV"
+
+      - name: Build
+        working-directory: native/android
+        env:
+          TIMEFALL_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          TIMEFALL_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          TIMEFALL_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Name the file
+        run: |
+          cp native/android/app/build/outputs/apk/release/app-release*.apk TimeFall.apk
+          sha256sum TimeFall.apk > TimeFall.apk.sha256
+          ls -la TimeFall.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TimeFall-android-${{ env.TIMEFALL_VERSION }}
+          path: |
+            TimeFall.apk
+            TimeFall.apk.sha256
+
+      # The release is what friends' phones download: the install page always
+      # points at the latest one, and the app compares its own build number
+      # with the latest tag to say when a newer build is ready.
+      - name: Publish the release
+        if: env.HAS_KEY == 'true' && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "android-v$TIMEFALL_VERSION" TimeFall.apk TimeFall.apk.sha256 \
+            --latest \
+            --title "TimeFall $TIMEFALL_VERSION for Android" \
+            --notes "Install or update: open https://dmatsib000-create.github.io/VizTime/install/ on the phone and follow the Android steps. Built from ${GITHUB_SHA::7}."

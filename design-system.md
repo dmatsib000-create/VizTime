@@ -1,4 +1,4 @@
-# VizTime design system
+# TimeFall design system
 
 The reference for what is built: tokens, components and patterns as they exist in [styles.css](styles.css), [index.html](index.html), the modules in [js/](js/) (listed at the top of [js/app.js](js/app.js)), with the pictures in [js/faces.js](js/faces.js). [design-direction.md](design-direction.md) holds the intent behind them ("Afternoon paper"): the philosophy, the session states, the surfaces and the copy voice.
 
@@ -431,7 +431,9 @@ Every button below is a native `<button type="button">` (or `type="submit"` in a
 
 **Description.** The menu: settings for mode, comfort cues, activities and the floating view. A bottom sheet on phones (top corners at `--radius`, square bottom), a centered dialog at 640px and wider. Fades in over `--dur-fade`.
 
-Settings that only one platform can use are hidden elsewhere: system notifications without the Notification API, and "Play tones in Silent mode" except on a touch device with the Audio Session API (`canPlayThroughSilent()` in sound.js). That one carries its cost in its hint, since playback may pause other audio while a tone sounds.
+Settings that only one platform can use are hidden elsewhere: system notifications without the Notification API (and on an iPhone web app, where they can never fire), "Play tones in Silent mode" except on a touch device with the Audio Session API (`canPlayThroughSilent()` in sound.js), and the phone apps' own: vibration, reminders while in the background (whose hint also says when the phone's Settings block them), floating on its own, and Android's exact-timing note. `isNative` and `platform` in [js/platform.js](js/platform.js) decide. The Silent-mode option carries its cost in its hint, since playback may pause other audio while a tone sounds.
+
+The last section, **Your data**, holds the code that carries presets, notes and settings between devices: Copy a code (and, on a phone's browser, an "Open in the TimeFall app" link), the code box, Bring in a pasted code, and a line that says what happened. Bringing a code in reloads the page so every part reads the new data.
 
 | Part | Use |
 |---|---|
@@ -455,6 +457,37 @@ Settings that only one platform can use are hidden elsewhere: system notificatio
   </form>
 </dialog>
 ```
+
+### Code box — `.code-box`
+
+**Description.** The one `<textarea>` in the app: a raised, bordered box in 12px mono for the data code, which is long and meant to be selected whole. It shows the code after Copy, and takes a pasted one.
+
+| State | Visual | Behavior |
+|---|---|---|
+| Default | `--paper-raised` fill, 1px `--rule-strong` border, 72px tall, resizable down the page | — |
+| Focus | Border `--ink-soft`, plus the global 2px `--ochre-ink` outline on keyboard focus | Copy selects its contents when the clipboard isn't available |
+
+**Accessibility.** `aria-label="Code"`; the result line under it is `aria-live="polite"`. Spellcheck, autocorrect and autocapitalize are off, so a phone keyboard leaves the code alone.
+
+| ✅ Do | ❌ Don't |
+|---|---|
+| Keep it for text a person copies whole | Use it for prose; notes are line inputs |
+
+```html
+<textarea class="code-box mono" id="m-code" rows="3" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Code"></textarea>
+```
+
+### Update note — `.update-note`
+
+**Description.** Android app only: one centred mono hint line under the setup screen, "TimeFall 1.0.12 is ready. Get it", shown when a newer build exists (`js/native.js`). The link opens the install page in the phone's browser. It is never a pop-up and never appears on the running or finish screen.
+
+```html
+<p class="hint mono update-note" id="update-note" hidden></p>
+```
+
+### Floating, Android — `body.is-floating`
+
+**Description.** The Android app's floating window is the page itself, shrunk by the system to about 240 × 300px (`FloatingPlugin.java`). The shell sets `is-floating` on the body while that lasts, and the stylesheet keeps only what fits: the title on one line, the next line, the picture, and in Work mode the schedule's two rows; the bar, controls, figures, dots, next card, notes and toast are hidden. It can't be tapped except to return to the app, so nothing in it needs a tap area. Check it at 240 × 300 in every mode, as with the desktop floating window.
 
 ### Toast — `.toast`
 
@@ -521,6 +554,8 @@ The ruler is the face for counting minutes: length is judged more accurately tha
 | Live announcements | one `aria-live="polite"` region | Speaks the warning, the finish, keyboard mode switches and the toast; never each minute. Work mode says "Session finished" only. |
 | Mode-specific content | `.only-full`, `.only-work`, `.only-simple`, `.not-simple` | Swap words per mode inside one element rather than duplicating elements. |
 | Floating window | `body.pip`, `.pip-*` | Sized in `vmin`. Drops controls, then figures, then the next line before the face shrinks. Wider than 5:4, the picture sits beside the words, except the ruler, which stays stacked. |
+| Reminders on a phone | `cues.js` + `native.js` | While the app is in front the page plays its cues; when it goes to the background the cues still to come are scheduled from the session's timestamps, and cancelled on return. Never late; Work mode schedules only "Session finished." (tested). |
+| Carrying data | `packCode`, `unpackCode`, `importData` in store.js | One code for settings, presets, notes and lengths. Presets add, newer notes win, device-bound settings (reminders, vibration, Silent-mode tones) stay. |
 
 ## Adding something new
 

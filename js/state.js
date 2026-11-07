@@ -2,6 +2,7 @@
 
 import * as E from './engine.js';
 import { load, save } from './store.js';
+import { isNative } from './platform.js';
 
 /* ---------- Settings ---------- */
 
@@ -23,7 +24,9 @@ export const BUNDLES = {
 export const clone = o => JSON.parse(JSON.stringify(o));
 const DEFAULTS = {
   defaultMode: 'full', face: 'planner', fullFace: 'disc', bundle: 'balanced', ...clone(BUNDLES.balanced),
-  volume: 0.6, flash: false, wake: true, notify: false, rememberLengths: false, silentTones: false,
+  volume: 0.6, flash: false, wake: true, notify: isNative, rememberLengths: false, silentTones: false,
+  // The phone shells: vibration with the cues, and Android's floating window opening on its own.
+  vibrate: false, autoFloat: false,
 };
 const stored = load('settings', {});
 export const settings = { ...clone(DEFAULTS), ...stored, cues: { ...clone(DEFAULTS.cues), ...(stored.cues || {}) } };

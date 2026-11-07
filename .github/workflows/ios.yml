@@ -1,0 +1,128 @@
+# The iPhone app: built on GitHub's Mac from the web app and the shell in
+# native/ios, signed with Apple's cloud signing through an App Store Connect
+# API key, and uploaded to TestFlight. Without the Apple secrets (before the
+# account exists, or on a pull request) it only compiles the shell, to prove
+# that still works. The schedule rebuilds every two months, because a
+# TestFlight build stops working 90 days after upload.
+name: iPhone app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'styles.css'
+      - 'sw.js'
+      - 'manifest.webmanifest'
+      - 'js/**'
+      - 'fonts/**'
+      - 'icons/**'
+      - 'native/**'
+      - '!native/android/**'
+      - '.github/workflows/ios.yml'
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'styles.css'
+      - 'sw.js'
+      - 'manifest.webmanifest'
+      - 'js/**'
+      - 'fonts/**'
+      - 'icons/**'
+      - 'native/**'
+      - '!native/android/**'
+      - '.github/workflows/ios.yml'
+  schedule:
+    - cron: '0 9 1 1,3,5,7,9,11 *'
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and upload to TestFlight
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      HAS_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY != '' && secrets.APPSTORE_KEY_ID != '' && secrets.APPSTORE_ISSUER_ID != '' && secrets.APPLE_TEAM_ID != '' }}
+      BUILD_NUMBER: ${{ github.run_number }}
+      MARKETING_VERSION: '1.0.0'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: native/package-lock.json
+
+      - name: Install the shell's tooling
+        run: npm ci
+        working-directory: native
+
+      - name: Gather the web app into the shell
+        run: npm run sync -- ios
+        working-directory: native
+
+      - name: Show the Xcode in use
+        run: xcodebuild -version
+
+      # Pull requests and runs without the Apple secrets: compile for the
+      # simulator, where no signing is needed.
+      - name: Compile check
+        if: env.HAS_KEY != 'true' || github.event_name == 'pull_request'
+        working-directory: native/ios/App
+        run: >
+          xcodebuild -project App.xcodeproj -scheme App -configuration Release
+          -sdk iphonesimulator -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO build -quiet
+
+      # The archive is built unsigned; the export step signs it with a
+      # distribution certificate Apple keeps for the account (cloud signing),
+      # makes the provisioning profile, and uploads the result to TestFlight.
+      - name: Archive
+        if: env.HAS_KEY == 'true' && github.event_name != 'pull_request'
+        working-directory: native/ios/App
+        run: >
+          xcodebuild -project App.xcodeproj -scheme App -configuration Release
+          -destination 'generic/platform=iOS'
+          -archivePath "$RUNNER_TEMP/TimeFall.xcarchive"
+          CURRENT_PROJECT_VERSION="$BUILD_NUMBER" MARKETING_VERSION="$MARKETING_VERSION"
+          CODE_SIGNING_ALLOWED=NO archive -quiet
+
+      - name: Sign and upload to TestFlight
+        if: env.HAS_KEY == 'true' && github.event_name != 'pull_request'
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          mkdir -p ~/private_keys
+          printf '%s\n' "$APPSTORE_PRIVATE_KEY" > ~/private_keys/AuthKey_"$APPSTORE_KEY_ID".p8
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>teamID</key><string>$APPLE_TEAM_ID</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/TimeFall.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_"$APPSTORE_KEY_ID".p8 \
+            -authenticationKeyID "$APPSTORE_KEY_ID" \
+            -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID"
+          rm -f ~/private_keys/AuthKey_"$APPSTORE_KEY_ID".p8
+          echo "Uploaded build $BUILD_NUMBER of TimeFall $MARKETING_VERSION to App Store Connect."

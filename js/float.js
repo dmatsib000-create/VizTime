@@ -5,7 +5,11 @@
 // into a canvas and streamed. It floats over other apps but can't be tapped,
 // and iOS may freeze it while the app is in the background.
 
-export const canFloatWindow = () => 'documentPictureInPicture' in window;
+import { isNative } from './platform.js';
+
+// The phone shells have their own floating view (js/native.js), so neither
+// browser kind applies inside them.
+export const canFloatWindow = () => !isNative && 'documentPictureInPicture' in window;
 
 // An iPhone home-screen app refuses picture-in-picture although it reports it
 // as available; a Safari tab allows it (WebKit bug 303885, device test 7).
@@ -15,7 +19,7 @@ export const inIosHomeScreenApp = () => navigator.standalone === true
     && typeof HTMLVideoElement.prototype.webkitSetPresentationMode === 'function');
 
 export function canFloatVideo() {
-  if (inIosHomeScreenApp()) return false;
+  if (isNative || inIosHomeScreenApp()) return false;
   const v = document.createElement('video');
   return !!(document.pictureInPictureEnabled || typeof v.webkitSetPresentationMode === 'function')
     && typeof HTMLCanvasElement.prototype.captureStream === 'function';

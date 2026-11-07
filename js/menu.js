@@ -1,7 +1,8 @@
 // The menu sheet and the mode switch.
 
+import { isNative, platform, isIphoneWeb, isPhoneWeb } from './platform.js';
 import { chime, unlockAudio, canPlayThroughSilent } from './sound.js';
-import { save } from './store.js';
+import { save, packCode, unpackCode, importData } from './store.js';
 import { BUNDLES, clone, settings, saveSettings, mode, session, setMode } from './state.js';
 import { $, toast, announce } from './ui.js';
 import { form, defaultBy } from './setup.js';
@@ -10,6 +11,7 @@ import { render } from './screens.js';
 import { frame } from './draw.js';
 import { floatDoc, buildFloat, renderFloatText } from './pip.js';
 import { canFloatWindow, canFloatVideo, inIosHomeScreenApp } from './float.js';
+import { phone, refreshPhone, askForCues, canFloatNative, setAutoFloat, openExactSettings } from './native.js';
 
 const BUNDLE_HINTS = {
   quiet: 'No sound. A faint warm light is the only cue.',
@@ -25,6 +27,17 @@ function matchBundle() {
 
 /* ---------- Menu ---------- */
 
+// What the floating view can do here, in a sentence.
+function floatHint() {
+  if (canFloatNative()) return 'While a session runs, choose Float at the top. TimeFall shrinks to a small window that stays over your other apps, with the picture and what comes next.';
+  if (isNative && platform === 'android') return 'This phone has no floating window. TimeFall keeps the screen awake instead, and its reminders reach the lock screen.';
+  if (isNative) return 'iPhone apps can’t keep a small window over other apps. TimeFall keeps the screen awake while a session runs, and its reminders reach the Lock Screen.';
+  if (canFloatWindow()) return 'While a session runs, choose Float at the top. A small window stays on top of your other apps, with the picture and a few controls.';
+  if (canFloatVideo()) return 'While a session runs, choose Float at the top. The picture floats as a small video above other apps. It can’t be tapped, and the phone may pause it while TimeFall is in the background.';
+  if (inIosHomeScreenApp()) return 'The floating view works when TimeFall is open in Safari, not from the Home Screen. Apple doesn’t support it in home-screen apps yet.';
+  return 'This browser has no floating view. Chrome or Edge on a computer can keep the session in a small window on top of other apps.';
+}
+
 function renderMenu() {
   $('m-default').value = settings.defaultMode;
   settings.bundle = matchBundle();
@@ -39,22 +52,43 @@ function renderMenu() {
   $('m-breathe').checked = settings.breathe;
   $('m-flash').checked = settings.flash;
   $('m-wake').checked = settings.wake;
-  $('m-notify').checked = settings.notify;
   $('m-silent').checked = settings.silentTones;
   $('m-silent-wrap').hidden = !canPlayThroughSilent();
   $('m-remember').checked = settings.rememberLengths;
   $('m-forget').textContent = 'Forget saved lengths';
-  $('m-notify-wrap').hidden = !('Notification' in window);
-  $('m-float-hint').textContent = canFloatWindow()
-    ? 'While a session runs, choose Float at the top. A small window stays on top of your other apps, with the picture and a few controls.'
-    : canFloatVideo()
-      ? 'While a session runs, choose Float at the top. The picture floats as a small video above other apps. It can’t be tapped, and the phone may pause it while VizTime is in the background.'
-      : inIosHomeScreenApp()
-        ? 'The floating view works when VizTime is open in Safari, not from the Home Screen. Apple doesn’t support it in home-screen apps yet.'
-        : 'This browser has no floating view. Chrome or Edge on a computer can keep the session in a small window on top of other apps.';
+
+  // The phone shells vibrate and schedule reminders; a computer browser shows
+  // notifications; an iPhone web app can't fire them once it leaves the screen.
+  $('m-vibrate-wrap').hidden = !isNative;
+  $('m-vibrate').checked = settings.vibrate;
+  $('m-notify-wrap').hidden = isNative ? false : (!('Notification' in window) || isIphoneWeb);
+  $('m-notify-label').textContent = isNative ? 'Reminders while TimeFall is in the background' : 'System notification at the warning and finish (computer)';
+  $('m-notify').checked = settings.notify;
+  // The hint describes the checkbox to screen readers too, so it is empty where it doesn't apply.
+  $('m-notify-hint').hidden = !isNative;
+  $('m-notify-hint').textContent = !isNative ? ''
+    : settings.notify && phone.cues === 'denied'
+      ? 'Notifications are turned off for TimeFall in the phone’s Settings, so nothing reaches the lock screen until they are on again.'
+      : 'Each cue you have turned on reaches the lock screen as a soft tone and a line, with the phone locked or TimeFall out of sight. In Work mode, only “Session finished.”';
+  $('m-exact-wrap').hidden = !(isNative && platform === 'android' && settings.notify && !phone.exact);
+
+  $('m-float-hint').textContent = floatHint();
+  $('m-autofloat-wrap').hidden = !canFloatNative();
+  $('m-autofloat').checked = settings.autoFloat;
+
+  $('m-open-app').hidden = true; // offered once a code is made, on a phone's browser
+  $('m-data-hint').textContent = isNative
+    ? 'Presets, notes and settings stay on this phone. A code brings them in from the web version, or keeps a copy.'
+    : 'Presets, notes and settings stay in this browser. A code carries them to the TimeFall app on your phone, or keeps a copy.';
+  $('m-about').textContent = isNative && phone.version ? `TimeFall ${phone.version}` : '';
 }
 
-$('menu-btn').addEventListener('click', () => { renderMenu(); $('sheet').showModal(); });
+$('menu-btn').addEventListener('click', () => {
+  renderMenu();
+  $('sheet').showModal();
+  // Permissions may have changed in the phone's Settings meanwhile.
+  refreshPhone().then(renderMenu);
+});
 $('sheet').addEventListener('click', e => { if (e.target === $('sheet')) $('sheet').close(); });
 
 /* ---------- Mode switch ---------- */
@@ -111,13 +145,68 @@ $('m-warmth').addEventListener('change', () => { settings.warmth = $('m-warmth')
 $('m-breathe').addEventListener('change', () => { settings.breathe = $('m-breathe').checked; saveSettings(); renderMenu(); });
 $('m-flash').addEventListener('change', () => { settings.flash = $('m-flash').checked; saveSettings(); });
 $('m-wake').addEventListener('change', () => { settings.wake = $('m-wake').checked; saveSettings(); syncWake(); });
+$('m-vibrate').addEventListener('change', () => { settings.vibrate = $('m-vibrate').checked; saveSettings(); });
 $('m-remember').addEventListener('change', () => { settings.rememberLengths = $('m-remember').checked; saveSettings(); });
 $('m-forget').addEventListener('click', () => { save('lengths', null); $('m-forget').textContent = 'Saved lengths forgotten'; });
 $('m-notify').addEventListener('change', async () => {
   settings.notify = $('m-notify').checked;
+  if (isNative) {
+    saveSettings();
+    if (settings.notify) await askForCues();
+    renderMenu();
+    return;
+  }
   if (settings.notify && Notification.permission !== 'granted') {
     const p = await Notification.requestPermission().catch(() => 'denied');
     if (p !== 'granted') { settings.notify = false; $('m-notify').checked = false; toast('Notifications are blocked in this browser.'); }
   }
   saveSettings();
 });
+$('m-exact').addEventListener('click', openExactSettings);
+$('m-autofloat').addEventListener('change', () => {
+  settings.autoFloat = $('m-autofloat').checked;
+  saveSettings();
+  setAutoFloat(settings.autoFloat && session && !session.finishedAt);
+});
+
+/* ---------- Your data ---------- */
+
+$('m-copy').addEventListener('click', async () => {
+  const code = packCode();
+  $('m-code').value = code;
+  let copied = false;
+  try { await navigator.clipboard.writeText(code); copied = true; } catch { /* some browsers allow copying only from a field */ }
+  if (!copied) {
+    $('m-code').focus();
+    $('m-code').select();
+    try { copied = document.execCommand('copy'); } catch { /* then the code is selected, ready to copy */ }
+  }
+  $('m-data-saved').textContent = copied
+    ? (isNative ? 'Copied.' : 'Copied. In the TimeFall app, open Menu → Your data, paste it and choose Bring in.')
+    : 'The code is selected above. Copy it.';
+  if (isPhoneWeb) {
+    $('m-open-app').href = `timefall://import?code=${code}`;
+    $('m-open-app').hidden = false;
+  }
+});
+$('m-paste').addEventListener('click', () => bringIn($('m-code').value));
+
+// A code pasted here, or arriving by link (js/native.js). The page reloads so
+// every part of it reads the new data.
+export function bringIn(code) {
+  let result;
+  try {
+    result = importData(unpackCode(code));
+  } catch {
+    $('m-data-saved').textContent = 'That isn’t a TimeFall code. Copy the whole code, then paste it here.';
+    toast('That isn’t a TimeFall code.');
+    return;
+  }
+  const parts = [];
+  if (result.presets) parts.push(`${result.presets} preset${result.presets === 1 ? '' : 's'}`);
+  if (result.notes) parts.push(`${result.notes} note${result.notes === 1 ? '' : 's'}`);
+  if (result.settings) parts.push('settings');
+  if (!parts.length) { toast('Nothing new in that code'); return; }
+  toast(`Brought in ${parts.join(', ')}`);
+  setTimeout(() => location.reload(), 1200);
+}

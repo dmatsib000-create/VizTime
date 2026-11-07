@@ -1,0 +1,20 @@
+{
+  "appId": "io.github.dmatsib000create.timefall",
+  "appName": "TimeFall",
+  "webDir": "www",
+  "backgroundColor": "#EFEAE0",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#EFEAE0"
+  },
+  "android": {
+    "backgroundColor": "#EFEAE0"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_timefall",
+      "iconColor": "#7A5230",
+      "presentationOptions": []
+    }
+  }
+}
