@@ -33,6 +33,19 @@ The running record of turning VizTime into the TimeFall phone apps. Decisions an
 7. Then the assistant runs the iPhone workflow and watches it upload. When App Store Connect shows the build (10 to 30 minutes after upload): **TestFlight tab** → Test Information: Beta App Description ("A calm visual timer for time blindness and transitions. Try a session in each mode.") and Feedback Email (the owner's); → External Testing → + group "Friends" → enable **Public Link** → Add Build → submit. Beta App Review usually answers within a day or two. Copy the public link. Say "link: …".
 8. Then the assistant puts the link on the install page and sends the owner's phone checklist.
 
+## The owner's phone checklist (once TimeFall is installed from TestFlight)
+
+Each line says what to try and what to tell the assistant if it is off.
+
+1. Open TimeFall. It should open in Full mode on the setup screen, with the paper look. *If not: say what you see instead.*
+2. Start a 2-minute session with "Notes" and next "Lunch", then press the side button to lock the phone. At about 1 min 40 s a soft tone and "Under a minute left · Notes / Then Lunch" should appear on the Lock Screen; at 2 min, "Notes finished / Next: Lunch". *If nothing arrives: say whether the phone asked permission for notifications when you started, and whether Silent mode or a Focus was on.*
+3. Unlock and open TimeFall: it should be on the finish screen, with no late sound. *If it played a sound on opening: say so.*
+4. Start a 2-minute session and leave the phone on the desk with TimeFall open. The screen should stay on for the whole session. *If it dimmed or locked: say after how long.*
+5. Menu → Comfort → turn on "Vibrate at the warning and the finish", start a 1-minute session and stay in the app: a short buzz at about 50 s and two at the end. *If no buzz: say so.*
+6. Switch to Work mode, start a session that ends in 3 minutes, lock the phone. At the end only "Session finished." should appear, nothing else, on the Lock Screen. *If any other words or a number appear: say exactly what.*
+7. On the same iPhone, open the web page in Safari, Menu → Your data → Copy a code → "Open in the TimeFall app". TimeFall should open and say "Brought in …" *If the link does nothing or Safari says it can't open the page: say which.*
+8. Menu → Comfort → "Try it" should play the finish tone while the app is open. *If silent with the switch off Silent: say so.*
+
 ## Facts the assistant should not have to rediscover
 
 - Branch for this work: `timefall-app`; pull request into `main`.
