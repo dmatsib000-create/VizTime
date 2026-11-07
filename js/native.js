@@ -87,10 +87,15 @@ async function makeChannels() {
   }
 }
 
-function toNotification(c) {
+// `exact` is false when Android has had exact timing turned off for the app:
+// asking for an exact alarm then would open the phone's settings screen in
+// the person's face, so the reminder is scheduled as close as Android allows
+// and the menu offers the setting instead.
+function toNotification(c, exact) {
   const n = {
     id: c.id, title: c.title, body: c.body, autoCancel: true, extra: { cue: c.cue },
     schedule: { at: new Date(c.at), allowWhileIdle: true },
+    isExactNotification: exact,
   };
   if (c.tone) n.sound = `${SOUND[c.cue]}.wav`;
   if (platform === 'android') n.channelId = channelId(c.tone ? c.cue : 'quiet', c.vibrate);
@@ -98,19 +103,33 @@ function toNotification(c) {
 }
 
 // Runs one step at a time, so a quick leave-and-return never interleaves.
-let queue = Promise.resolve();
+// `armed` remembers whether anything was scheduled, so the frequent calls
+// from render() cost nothing while the app is in front.
+let queue = Promise.resolve(), armed = false;
 export const isFloating = () => isNative && document.body.classList.contains('is-floating');
 
 export function syncBackgroundCues(hidden = document.hidden || isFloating()) {
   if (!has('LocalNotifications')) return;
   queue = queue.then(async () => {
-    await call('LocalNotifications', 'cancel', { notifications: Object.values(CUE_IDS).map(id => ({ id })) });
-    if (!hidden) return;
+    if (armed || hidden) {
+      await call('LocalNotifications', 'cancel', { notifications: Object.values(CUE_IDS).map(id => ({ id })) });
+      armed = false;
+    }
+    if (!hidden) {
+      // Back in front: a reminder that already fired has done its job; the page shows the same thing.
+      await call('LocalNotifications', 'removeAllDeliveredNotifications');
+      return;
+    }
     const plan = plannedCues(mode, session, settings, Date.now());
     if (!plan.length) return;
     const p = await call('LocalNotifications', 'checkPermissions');
     if (p?.display !== 'granted') return;
-    await call('LocalNotifications', 'schedule', { notifications: plan.map(toNotification) });
+    if (platform === 'android') {
+      const e = await call('LocalNotifications', 'checkExactNotificationSetting');
+      phone.exact = e?.exact_alarm !== 'denied';
+    }
+    await call('LocalNotifications', 'schedule', { notifications: plan.map(c => toNotification(c, phone.exact)) });
+    armed = true;
   }).catch(() => {});
 }
 
@@ -180,20 +199,27 @@ function importFromUrl(url) {
 const RELEASES = 'https://api.github.com/repos/dmatsib000-create/VizTime/releases/latest';
 const INSTALL_PAGE = 'https://dmatsib000-create.github.io/VizTime/install/';
 
+const buildOf = version => parseInt((version || '').split('.').pop(), 10) || 0;
+
 async function checkForUpdate() {
   if (platform !== 'android') return;
-  showUpdate();
-  if (Date.now() - load('updateChecked', 0) < 20 * 60 * 60_000) return;
   try {
     const info = await call('App', 'getInfo');
     const build = parseInt(info?.build, 10) || 0;
+    // A note kept from before an update is stale once that build is the one running.
+    if (phone.update && buildOf(phone.update.version) <= build) {
+      phone.update = null;
+      save('update', null);
+    }
+    showUpdate();
+    if (Date.now() - load('updateChecked', 0) < 20 * 60 * 60_000) return;
     const res = await fetch(RELEASES, { headers: { Accept: 'application/vnd.github+json' } });
     if (!res.ok) return;
     save('updateChecked', Date.now());
     const rel = await res.json();
-    const m = /^android-v(\d+\.\d+\.(\d+))$/.exec(rel.tag_name || '');
+    const m = /^android-v(\d+\.\d+\.\d+)$/.exec(rel.tag_name || '');
     if (!m) return;
-    phone.update = +m[2] > build ? { version: m[1], url: INSTALL_PAGE } : null;
+    phone.update = buildOf(m[1]) > build ? { version: m[1], url: INSTALL_PAGE } : null;
     save('update', phone.update);
     showUpdate();
   } catch { /* offline, or GitHub is busy: another day */ }
