@@ -12,7 +12,7 @@ import { resetForm } from './setup.js';
 import { render } from './screens.js';
 import { frame } from './draw.js';
 import { closeFloat } from './pip.js';
-import { askForCues, vibrate, keepAwake } from './native.js';
+import { askForCues, vibrate, keepAwake, isFloating } from './native.js';
 
 const { MIN } = E;
 
@@ -114,9 +114,12 @@ $('stop-btn').addEventListener('click', stopSession);
 export function playCue(cue) {
   const c = settings.cues[cue] || {};
   const words = cueWords(mode, cue, session, Date.now());
-  if (c.sound) chime(cue, settings.volume, settings.silentTones);
-  if (settings.vibrate && cue !== 'half') vibrate(cue);
-  if (c.speak) speak(words);
+  // In Android's floating window the phone's reminder carries the tone and
+  // the words (js/native.js); the page only draws.
+  const floating = isFloating();
+  if (c.sound && !floating) chime(cue, settings.volume, settings.silentTones);
+  if (settings.vibrate && cue !== 'half' && !floating) vibrate(cue);
+  if (c.speak && !floating) speak(words);
   if (cue !== 'half') announce(words || '');
   if (cue !== 'half') notify(cue);
 }

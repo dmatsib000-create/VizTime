@@ -38,7 +38,14 @@ export async function initNative() {
   document.addEventListener('visibilitychange', () => syncBackgroundCues(document.hidden));
   listen('App', 'appUrlOpen', ({ url }) => importFromUrl(url));
   call('App', 'getLaunchUrl').then(r => r?.url && importFromUrl(r.url)).catch(() => {});
-  listen('Floating', 'floatingChanged', ({ active }) => document.body.classList.toggle('is-floating', !!active));
+  // In Android's floating window the page keeps drawing, but its cues are
+  // handed to the phone: a swipe that closes the window ends the activity
+  // before the page could schedule anything, so the reminders are set while
+  // it floats, and the page plays no tone of its own meanwhile (session.js).
+  listen('Floating', 'floatingChanged', ({ active }) => {
+    document.body.classList.toggle('is-floating', !!active);
+    syncBackgroundCues(active || document.hidden);
+  });
   if (has('Floating')) call('Floating', 'isAvailable').then(r => { phone.floating = !!r?.available; }).catch(() => {});
   call('App', 'getInfo').then(r => { phone.version = r ? `${r.version} (${r.build})` : ''; }).catch(() => {});
   syncBackgroundCues(false); // a fresh start never keeps stale reminders
@@ -92,7 +99,9 @@ function toNotification(c) {
 
 // Runs one step at a time, so a quick leave-and-return never interleaves.
 let queue = Promise.resolve();
-export function syncBackgroundCues(hidden = document.hidden) {
+export const isFloating = () => isNative && document.body.classList.contains('is-floating');
+
+export function syncBackgroundCues(hidden = document.hidden || isFloating()) {
   if (!has('LocalNotifications')) return;
   queue = queue.then(async () => {
     await call('LocalNotifications', 'cancel', { notifications: Object.values(CUE_IDS).map(id => ({ id })) });
