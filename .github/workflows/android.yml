@@ -112,7 +112,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "android-v$TIMEFALL_VERSION" TimeFall.apk TimeFall.apk.sha256 \
-            --latest \
-            --title "TimeFall $TIMEFALL_VERSION for Android" \
-            --notes "Install or update: open https://dmatsib000-create.github.io/VizTime/install/ on the phone and follow the Android steps. Built from ${GITHUB_SHA::7}."
+          TAG="android-v$TIMEFALL_VERSION"
+          # A re-run keeps its run number, so the release may already exist: then only the files are replaced.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" TimeFall.apk TimeFall.apk.sha256 --clobber
+          else
+            gh release create "$TAG" TimeFall.apk TimeFall.apk.sha256 \
+              --latest \
+              --title "TimeFall $TIMEFALL_VERSION for Android" \
+              --notes "Install or update: open https://dmatsib000-create.github.io/VizTime/install/ on the phone and follow the Android steps. Built from ${GITHUB_SHA::7}."
+          fi

@@ -129,7 +129,7 @@ async function notify(cue) {
   if (isNative || !settings.notify || !document.hidden || !('Notification' in window) || Notification.permission !== 'granted') return;
   const n = notification(mode, cue, session, Date.now());
   if (!n) return;
-  const opts = { body: n.body, tag: 'viztime', icon: 'icons/icon-192.png', silent: true };
+  const opts = { body: n.body, tag: 'timefall', icon: 'icons/icon-192.png', silent: true };
   try {
     const reg = await navigator.serviceWorker?.getRegistration();
     if (reg) reg.showNotification(n.title, opts); else new Notification(n.title, opts);
