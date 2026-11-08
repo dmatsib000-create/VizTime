@@ -2,7 +2,7 @@
 
 The running record of turning VizTime into the TimeFall phone apps. Decisions and their reasons are in [docs/research/2026-11-07-timefall-native-apps.md](research/2026-11-07-timefall-native-apps.md). When the owner says "continue TimeFall", start here.
 
-*Last updated: 7 November 2026.*
+*Last updated: 8 November 2026.*
 
 ## Where things stand
 
@@ -16,7 +16,7 @@ The running record of turning VizTime into the TimeFall phone apps. Decisions an
 | iPhone build and TestFlight workflow | Written; the compile check passed on CI (Xcode 26.6); the signed upload is untested until the Apple secrets exist | Apple Developer enrollment, then the App Store Connect app record and API key |
 | Install page at `/install/` | Done, iPhone link pending | The TestFlight public link |
 | Docs: README, guide, design system, CLAUDE.md | Done | |
-| Apple Developer Program enrollment | Not started | **Owner** (US$99 a year, one to several days to approve) |
+| Apple Developer Program enrollment | Purchased on 8 November 2026 (US$99 a year); Apple shows "enrollment pending" | **Apple's confirmation email**, then the owner says "enrolled" |
 | App Store Connect: register the bundle id, create the app, make an Admin API key, note the Team ID | Not started | Owner, after enrollment |
 | GitHub secrets for Apple (`APPSTORE_PRIVATE_KEY`, `APPSTORE_KEY_ID`, `APPSTORE_ISSUER_ID`, `APPLE_TEAM_ID`) | Not started | Owner pastes them (secrets are the owner's to type) |
 | First iPhone upload, TestFlight test information, public link, Beta App Review | Not started | After the secrets; review takes a day or two |
@@ -24,7 +24,7 @@ The running record of turning VizTime into the TimeFall phone apps. Decisions an
 
 ## What only the owner can do, in order
 
-1. **Enroll in the Apple Developer Program** (iPhone: the Apple Developer app → Account → Enroll Now → Individual; pay US$99). Wait for Apple's email. Say "enrolled".
+1. **Enroll in the Apple Developer Program.** Done: purchased on 8 November 2026 as an individual; Apple showed "enrollment pending, you'll receive an email soon". Wait for Apple's confirmation email, then say "enrolled". If Apple's email asks for anything (photo identification, a call), do that first. If no confirmation has come within 24 hours of the purchase, Apple says to contact them (see the facts below).
 2. **Register the app id** at [developer.apple.com/account/resources/identifiers](https://developer.apple.com/account/resources/identifiers/list): + → App IDs → App → Description "TimeFall", Bundle ID *Explicit* `io.github.dmatsib000create.timefall`, no capabilities → Register.
 3. **Create the app record** at [appstoreconnect.apple.com/apps](https://appstoreconnect.apple.com/apps): + → New App → iOS, Name "TimeFall" (if taken, "TimeFall Timer"), Primary language English, Bundle ID the one above, SKU `timefall`, Full Access → Create.
 4. **Make an API key** at App Store Connect → Users and Access → Integrations → App Store Connect API → Team Keys → +: Name "GitHub builds", Access **Admin** → Generate. Download the `.p8` file (only offered once). Note the **Key ID** and the **Issuer ID** shown on that page.
@@ -54,3 +54,4 @@ Each line says what to try and what to tell the assistant if it is off.
 - The TestFlight link goes into `install/index.html` (`#testflight-link`, and hide `#testflight-soon`).
 - Tools on this PC: JDK 21 at `C:\Users\davem\Tools\jdk-21`; Android SDK at `C:\Users\davem\AppData\Local\Android\Sdk`; signing key backup at `C:\Users\davem\OneDrive\Documents\TimeFall-keys`. The PC's drive is nearly full; a local Gradle build needs over a gigabyte free.
 - `node --test` must keep passing; `cd native && npm run sync` gathers the web app before any shell build.
+- Apple enrollment, from Apple's own page: an order acknowledgement email arrives at purchase and a membership confirmation email once the purchase is processed; if no confirmation arrives within 24 hours, use [developer.apple.com/contact](https://developer.apple.com/contact/) and quote the Enrollment ID from the order email. Apple gives no other timescale; people report anything from a day to several weeks, longer when Apple asks for photo identification (it does when the card is not in the applicant's own name). Until the confirmation comes, nothing else on the Apple side can be done. The membership year, and so the renewal date, starts when Apple activates it: write that date here when the email arrives.
