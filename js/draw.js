@@ -2,10 +2,10 @@
 // draws the picture, the warm light and the zoom.
 
 import * as E from './engine.js';
-import { palette, drawFace, paintWarmth, redrawGap, SERIF } from './faces.js';
+import { palette, drawFace, paintWarmth, redrawGap, SERIF, FACE_SETTING, faceFor } from './faces.js';
 import { mode, session, settings, persist } from './state.js';
 import { $, body, dateFmt, fmtClock, fmtShort } from './ui.js';
-import { pageTitle } from './words.js';
+import { pageTitle, sessionTitle, videoLine } from './words.js';
 import { labelChips } from './setup.js';
 import { playCue, onFinished, syncWake } from './session.js';
 import { renderRun, labelMain } from './screens.js';
@@ -72,29 +72,20 @@ function targets(now) {
 
 export function faceModel(now) {
   const s = session;
-  const end = s.pausedAt ? s.endAt + (now - s.pausedAt) : s.endAt;
+  const end = E.endsAt(s, now);
   return {
     frac: E.fraction(s, now), warnFrac: Math.min(1, s.warnMs / s.totalMs),
     stage: E.stage(s, now), warnP: E.warnProgress(s, now), paused: !!s.pausedAt,
     now, endAt: end, totalMs: s.totalMs, warnMs: s.warnMs, remainingMs: E.remaining(s, now),
-    title: s.title || (mode === 'work' ? 'Current' : `${Math.round(s.totalMs / E.MIN)} minutes`), next: s.next,
+    title: sessionTitle(mode, s), next: s.next,
     // The clock hands are Work mode's disguise; in Full they step back behind the time left.
     hands: mode === 'work' ? 'ink' : 'soft', zoom, fmtClock: fmtShort,
   };
 }
 
-// Work and Full each remember their own picture; Simple always has the disc.
-// Only the pictures a mode offers are drawn, whatever was saved: Work mode
-// must never show the disc or the ruler, which read as a timer, and the
-// stylesheet hiding their dots shouldn't be the only thing that ensures it.
-const FACE_SETTING = { work: 'face', full: 'fullFace' };
-const FACES = { work: ['planner', 'level', 'sun'], full: ['disc', 'level', 'sun', 'planner', 'ruler'], simple: ['disc'] };
+// Work and Full each remember their own picture (faces.js says which a mode offers).
 export const faceSetting = () => FACE_SETTING[mode];
-export const faceName = () => {
-  const offered = FACES[mode] || FACES.simple;
-  const saved = settings[faceSetting()];
-  return offered.includes(saved) ? saved : offered[0];
-};
+export const faceName = () => faceFor(mode, settings);
 
 export function paint(canvas, name, m) {
   const r = canvas.getBoundingClientRect();
@@ -195,13 +186,12 @@ export function paintVideo() {
     ctx.font = `italic 400 24px ${SERIF}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
-    const line = session.next ? `then ${session.next}` : (session.title || '');
-    ctx.fillText(line, W / 2, H - 22, W - 40);
+    ctx.fillText(videoLine(mode, session), W / 2, H - 22, W - 40);
   } else {
     ctx.fillStyle = pal.ink;
     ctx.font = `400 30px ${SERIF}`;
     ctx.textAlign = 'center';
-    ctx.fillText(mode === 'work' ? 'Session finished.' : (session?.next || 'Finished'), W / 2, H / 2);
+    ctx.fillText(videoLine(mode, session), W / 2, H / 2);
   }
   paintWarmth(ctx, W, H, warmth * (LIGHT_GAIN[settings.warmth] || 1), pal);
 }

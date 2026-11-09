@@ -362,7 +362,7 @@ Every button below is a native `<button type="button">` (or `type="submit"` in a
 |---|---|---|
 | Default | Ruled row; name in 19px serif, ", then …" in soft italic, length in 13px mono | — |
 | Hover | Raised fill on the start button; × goes ink | — |
-| Work mode | Length hidden | Work mode never shows a duration |
+| Work mode | No length | Work mode never shows a duration, so the length isn't written at all (`presetLength` in words.js) |
 
 **Accessibility.** Two buttons per row. The × has `aria-label="Remove preset …"` with the preset's name. Removing shows the toast with Undo for 10 seconds instead of asking first.
 

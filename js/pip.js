@@ -1,9 +1,9 @@
 // The floating views' content: the always-on-top window's page and controls,
 // and the picture-in-picture video. float.js opens and closes them.
 
-import * as E from './engine.js';
 import { mode, session } from './state.js';
-import { $, fmtClock, fmtLeft, toast } from './ui.js';
+import { $, toast } from './ui.js';
+import { floatText } from './words.js';
 import { faceLabel } from './screens.js';
 import { tick, lastTick, step, paint, paintVideo, faceModel, faceName, frameGap, paintRequests } from './draw.js';
 import { canFloatWindow, canFloatVideo, openFloatWindow, openFloatVideo } from './float.js';
@@ -126,9 +126,9 @@ export function renderFloatText(now) {
   floatDoc.body.classList.toggle('is-finished', finished);
   floatDoc.body.dataset.picture = faceName();
   g('pip-face-wrap').hidden = finished;
-  g('pip-title').textContent = finished
-    ? (work ? 'Session finished.' : 'Finished') : (session.title || (work ? fmtClock(now) : ''));
-  g('pip-next').textContent = session.next ? `${work || finished ? 'Next:' : 'then'} ${session.next}` : '';
+  const text = floatText(mode, session, now, now < floatRevealUntil);
+  g('pip-title').textContent = text.title;
+  g('pip-next').textContent = text.next;
   g('pip-row').hidden = work || finished;
   // At the finish the window offers the same handoff as the main screen.
   g('pip-end').hidden = !finished;
@@ -136,10 +136,7 @@ export function renderFloatText(now) {
   g('pip-main').hidden = !canStart;
   if (canStart) g('pip-main').textContent = $('l-main').textContent;
   floatDoc.getElementById('pip-pause').textContent = session.pausedAt ? 'Resume' : 'Pause';
-  const fig = floatDoc.getElementById('pip-fig');
-  if (finished) fig.textContent = '';
-  else if (work) fig.textContent = now < floatRevealUntil ? fmtLeft(E.remaining(session, now)) : '';
-  else fig.textContent = `${fmtLeft(E.remaining(session, now))} · ends ${fmtClock(session.endAt)}`;
+  floatDoc.getElementById('pip-fig').textContent = text.fig;
 }
 
 $('float-btn').addEventListener('click', openFloat);

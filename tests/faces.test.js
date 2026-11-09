@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MIN } from '../js/engine.js';
-import { clockMarks, redrawGap } from '../js/faces.js';
+import { clockMarks, redrawGap, faceFor, FACES } from '../js/faces.js';
 
 const UTC = Date.UTC(2026, 10, 2, 14, 3); // 14:03 UTC
 const local = (t, tz) => ((t - tz * MIN) % (24 * 60 * MIN) + 24 * 60 * MIN) % (24 * 60 * MIN) / MIN; // minutes past local midnight
@@ -75,4 +75,19 @@ test('the first 3% and last 5% of a session are drawn smoothly, where the level 
   assert.equal(at(0.06), 750);
   assert.equal(at(0.04), 80);   // with no warning stage, the disc shrinks fast near its centre
   assert.equal(redrawGap({ totalMs: 25 * MIN, stage: 'running', paused: true, frac: 1 }, false), 1000);
+});
+
+test('Work mode never shows the disc or the ruler, whatever was saved', () => {
+  for (const saved of [undefined, 'disc', 'ruler', 'planner', 'level', 'sun', 'nonsense']) {
+    const face = faceFor('work', { face: saved, fullFace: saved });
+    assert.ok(FACES.work.includes(face), `${saved} gave ${face}`);
+    assert.ok(face !== 'disc' && face !== 'ruler');
+  }
+  assert.equal(faceFor('work', {}), 'planner');
+});
+
+test('Full mode keeps its own choice; Simple always has the disc', () => {
+  assert.equal(faceFor('full', { face: 'sun', fullFace: 'ruler' }), 'ruler');
+  assert.equal(faceFor('full', {}), 'disc');
+  assert.equal(faceFor('simple', { face: 'sun', fullFace: 'ruler' }), 'disc');
 });

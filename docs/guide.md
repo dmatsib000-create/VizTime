@@ -85,7 +85,7 @@ A few minutes before the end (about 15% of the session, between 2 and 10 minutes
 - You're offered a box for a quick note about where you're leaving off, while you still remember.
 - If you've turned on a sound, a soft bell plays.
 
-You can choose how long this stage lasts with **Warning before the end** when setting up.
+You can choose how long this stage lasts with **Warning before the end** when setting up. It is kept to half the session at most, so it never comes before halfway: a 5-minute warning on a 6-minute session starts at 3 minutes.
 
 <br clear="right">
 

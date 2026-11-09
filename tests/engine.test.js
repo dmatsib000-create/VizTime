@@ -126,3 +126,23 @@ test('an end time just after midnight counts as tonight, not this morning', () =
 test('an end time earlier today stays in the past', () => {
   assert.ok(E.untilMs('13:10', 0, T0) < 0);
 });
+
+test('a chosen warning is kept to half the session, from the form and a preset alike', () => {
+  // Both create the session from the same numbers; neither clamps it itself.
+  const s = E.createSession({ totalMs: 6 * MIN, warnMs: 5 * MIN }, T0);
+  assert.equal(s.warnMs, 3 * MIN);
+  assert.equal(s.autoWarn, false);
+  assert.equal(E.createSession({ totalMs: 30 * MIN, warnMs: 5 * MIN }, T0).warnMs, 5 * MIN);
+  // So the warning never comes before halfway.
+  assert.ok(E.cueTime(s, 'warn') >= E.cueTime(s, 'half'));
+});
+
+test('while paused, the end moves on with the clock; running, it stays put', () => {
+  const s = E.createSession({ totalMs: 20 * MIN }, T0);
+  assert.equal(E.endsAt(s, T0 + 5 * MIN), T0 + 20 * MIN);
+  E.pause(s, T0 + 5 * MIN);
+  assert.equal(E.endsAt(s, T0 + 5 * MIN), T0 + 20 * MIN);
+  assert.equal(E.endsAt(s, T0 + 8 * MIN), T0 + 23 * MIN);
+  E.resume(s, T0 + 8 * MIN);
+  assert.equal(E.endsAt(s, T0 + 9 * MIN), T0 + 23 * MIN);
+});
