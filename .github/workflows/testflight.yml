@@ -1,0 +1,71 @@
+# Daily upkeep for the iPhone app on TestFlight, so friends keep a working
+# build without anyone watching App Store Connect:
+#
+# - Keeps the scheduled workflows switched on. GitHub switches off scheduled
+#   workflows in a public repository after 60 days without activity, which is
+#   exactly when nobody is changing the app. Re-enabling them through the API
+#   is the documented way back; doing it daily is meant to keep them on.
+# - Hands the newest build to the Friends group. Apple reviews one build of a
+#   version at a time, so a build uploaded while another is in review waits;
+#   this submits it once that review is decided (native/scripts/testflight.mjs
+#   --newest).
+# - Asks for a fresh build when the newest has under 30 days left of
+#   TestFlight's 90, by starting the iPhone app workflow.
+#
+# If this ever stops (the Actions page shows its last run long ago), see
+# "When something lapses" in native/README.md.
+name: TestFlight upkeep
+
+on:
+  schedule:
+    - cron: '23 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: testflight-upkeep
+  cancel-in-progress: false
+
+jobs:
+  upkeep:
+    name: Keep TestFlight current
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      HAS_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY != '' && secrets.APPSTORE_KEY_ID != '' && secrets.APPSTORE_ISSUER_ID != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Keep the scheduled workflows switched on
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for wf in ios.yml testflight.yml; do
+            gh api -X PUT "repos/${{ github.repository }}/actions/workflows/$wf/enable" && echo "$wf is on."
+          done
+
+      - name: Hand the newest build to the Friends group
+        id: handoff
+        if: env.HAS_KEY == 'true'
+        working-directory: native
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: node scripts/testflight.mjs --newest
+
+      # A workflow started this way runs even though GITHUB_TOKEN started it.
+      - name: Start a fresh iPhone build
+        if: steps.handoff.outputs.rebuild == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run ios.yml --repo "${{ github.repository }}" --ref main
+          echo "Started a fresh iPhone build: the newest had under 30 days left." >> "$GITHUB_STEP_SUMMARY"

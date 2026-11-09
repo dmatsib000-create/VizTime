@@ -17,7 +17,15 @@
 //   7. prints the public link in the job summary.
 // It exits with an error when the build can't reach testers yet, so the
 // Actions page shows the reason in red. "Re-run failed jobs" then picks up
-// the same build.
+// the same build. One case is not an error: Apple takes one build of a
+// version in review at a time, so a build that arrives while another is in
+// review waits, and the daily upkeep below submits it later.
+//
+// With --newest (the daily ".github/workflows/testflight.yml"), it works on
+// the newest processed build instead of the one just uploaded: it submits it
+// if it is still waiting for review and adds it to the group, and when that
+// build has under RENEW_DAYS left before TestFlight expires it, it asks for a
+// fresh build (writes rebuild=true to the step's outputs).
 
 import { createPrivateKey, sign } from 'node:crypto';
 import { appendFileSync } from 'node:fs';
@@ -27,11 +35,12 @@ const env = name => {
   if (!v) { console.error(`::error::Missing ${name}`); process.exit(2); }
   return v;
 };
+const NEWEST = process.argv.includes('--newest');
 const PRIVATE_KEY = env('APPSTORE_PRIVATE_KEY');
 const KEY_ID = env('APPSTORE_KEY_ID');
 const ISSUER_ID = env('APPSTORE_ISSUER_ID');
-const BUILD_NUMBER = env('BUILD_NUMBER');
-const MARKETING_VERSION = env('MARKETING_VERSION');
+const BUILD_NUMBER = NEWEST ? '' : env('BUILD_NUMBER');
+const MARKETING_VERSION = NEWEST ? '' : env('MARKETING_VERSION');
 const SHA = (process.env.GITHUB_SHA || '').slice(0, 7);
 
 const BUNDLE_ID = 'io.github.dmatsib000create.timefall';
@@ -42,6 +51,10 @@ const TESTER_LIMIT = 25;
 const DESCRIPTION = 'A calm visual timer for time blindness and transitions. Try a session in each mode.';
 const WHATS_NEW = `Build ${BUILD_NUMBER}${SHA ? `, from ${SHA}` : ''}. Try a session in each mode, and lock the phone during one.`;
 const WAIT_MINUTES = 50;
+// TestFlight builds stop working 90 days after upload. The upkeep asks for a
+// fresh one when the newest has fewer days than this left.
+const RENEW_DAYS = 30;
+const DAY = 24 * 60 * 60_000;
 
 /* ---------- The App Store Connect API ---------- */
 
@@ -64,19 +77,36 @@ class ApiError extends Error {
     const detail = (errors || []).map(e => `${e.code || e.title || ''} ${e.detail || ''}`.trim()).join('; ');
     super(`${status} from ${path.split('?')[0]}: ${detail || 'no detail'}`);
     this.status = status;
+    this.codes = (errors || []).map(e => e.code || '');
   }
 }
 
+// A busy or briefly failing App Store Connect (429, 5xx, a dropped
+// connection) is asked again, up to three more times, for reads and for
+// writes that are safe to repeat. A POST is never repeated: it could submit
+// or add twice.
 async function api(method, path, body) {
-  const res = await fetch(API + path, {
-    method,
-    headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
-  if (!res.ok) throw new ApiError(res.status, data?.errors, path);
-  return data;
+  const retries = method === 'POST' ? 0 : 3;
+  for (let attempt = 0; ; attempt++) {
+    let res;
+    try {
+      res = await fetch(API + path, {
+        method,
+        headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+    } catch (e) {
+      if (attempt < retries) { await sleep(5_000 * 2 ** attempt); continue; }
+      throw new Error(`No answer from App Store Connect for ${path.split('?')[0]}: ${e.message}`);
+    }
+    if ((res.status === 429 || res.status >= 500) && attempt < retries) { await sleep(5_000 * 2 ** attempt); continue; }
+    const text = await res.text();
+    // An outage can answer with an HTML page; its status still says what happened.
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch { data = { errors: [{ detail: text.slice(0, 120).replace(/\s+/g, ' ') }] }; }
+    if (!res.ok) throw new ApiError(res.status, data?.errors, path);
+    return data;
+  }
 }
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -111,6 +141,19 @@ async function waitForBuild(appId) {
     await sleep(60_000);
   }
 }
+
+// The newest upload, processed or not, for --newest.
+async function newestBuild(appId) {
+  const q = `/v1/builds?filter[app]=${appId}&sort=-uploadedDate&limit=1`
+    + '&fields[builds]=version,processingState,usesNonExemptEncryption,expired,uploadedDate,expirationDate';
+  return (await api('GET', q)).data[0] || null;
+}
+
+const daysLeft = (build, now = Date.now()) => {
+  const a = build.attributes;
+  const ends = a.expirationDate ? Date.parse(a.expirationDate) : Date.parse(a.uploadedDate) + 90 * DAY;
+  return Math.floor((ends - now) / DAY);
+};
 
 async function exportCompliance(build) {
   if (build.attributes.usesNonExemptEncryption != null) return;
@@ -184,11 +227,21 @@ async function submitForReview(build) {
   }
   const state = sub?.attributes?.betaReviewState;
   if (state && state !== 'REJECTED') return state;
-  sub = (await api('POST', '/v1/betaAppReviewSubmissions', {
-    data: { type: 'betaAppReviewSubmissions', relationships: { build: { data: { type: 'builds', id: build.id } } } },
-  })).data;
+  // The upkeep never sends a rejected build back unchanged: Apple's email
+  // says what to fix first. A re-run of the build's own job still can.
+  if (state === 'REJECTED' && NEWEST) return state;
+  try {
+    sub = (await api('POST', '/v1/betaAppReviewSubmissions', {
+      data: { type: 'betaAppReviewSubmissions', relationships: { build: { data: { type: 'builds', id: build.id } } } },
+    })).data;
+  } catch (e) {
+    // Apple takes one build of a version in review at a time.
+    if (e.codes?.some(c => /ANOTHER_BUILD_IN_REVIEW/.test(c))) return BEHIND;
+    throw e;
+  }
   return sub.attributes?.betaReviewState || 'WAITING_FOR_REVIEW';
 }
+const BEHIND = 'BEHIND_ANOTHER_BUILD';
 
 async function addToGroup(group, build) {
   try {
@@ -203,36 +256,66 @@ async function addToGroup(group, build) {
 const lines = [];
 let failed = false;
 const note = line => { console.log(line); lines.push(line); };
+const warn = line => { console.log(`::warning::${line}`); lines.push(line); };
 const fail = line => { console.log(`::error::${line}`); lines.push(line); failed = true; };
+const output = (name, value) => { if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `${name}=${value}\n`); };
 const plain = state => state.toLowerCase().replace(/_/g, ' ');
 
 try {
   const app = await findApp();
   note(`App: ${app.attributes.name} (${BUNDLE_ID}).`);
-  const build = await waitForBuild(app.id);
-  note(`Build ${BUILD_NUMBER} of ${MARKETING_VERSION} is processed.`);
-  await exportCompliance(build);
-  await whatToTest(build);
-  const missing = await testInformation(app.id);
-  const group = await friendsGroup(app.id);
-  if (missing.length) {
-    fail(`Not sent to Beta App Review: App Store Connect still needs ${missing.join(', ')}. Only the account holder can type those (TestFlight tab → Test Information). Then re-run this job.`);
+  let build;
+  if (NEWEST) {
+    build = await newestBuild(app.id);
+    if (!build) throw new Error('App Store Connect lists no builds yet.');
+    const v = build.attributes.version;
+    if (build.attributes.processingState !== 'VALID') {
+      note(`Newest build ${v} is still ${plain(build.attributes.processingState || 'processing')}; its own job hands it over.`);
+    } else {
+      const left = daysLeft(build);
+      note(`Newest build: ${v}, ${left} days before TestFlight expires it.`);
+      if (left < RENEW_DAYS) {
+        note(`Under ${RENEW_DAYS} days left: asking for a fresh build.`);
+        output('rebuild', 'true');
+      }
+    }
+    if (build.attributes.processingState !== 'VALID') build = null;
   } else {
-    note(`Beta App Review: ${plain(await submitForReview(build))}.`);
+    build = await waitForBuild(app.id);
+    note(`Build ${BUILD_NUMBER} of ${MARKETING_VERSION} is processed.`);
   }
-  try {
-    await addToGroup(group, build);
-    note(`Added to the "${GROUP_NAME}" group.`);
-  } catch (e) {
-    fail(`Could not add the build to the "${GROUP_NAME}" group: ${e.message}`);
+  if (build) {
+    const number = build.attributes.version || BUILD_NUMBER;
+    await exportCompliance(build);
+    if (!NEWEST) await whatToTest(build);
+    const missing = await testInformation(app.id);
+    const group = await friendsGroup(app.id);
+    let review = '';
+    if (missing.length) {
+      fail(`Not sent to Beta App Review: App Store Connect still needs ${missing.join(', ')}. Only the account holder can type those (TestFlight tab → Test Information). Then re-run this job.`);
+    } else {
+      review = await submitForReview(build);
+      if (review === 'REJECTED') fail(`Build ${number} was rejected in Beta App Review; Apple's email to the account holder says why. Fix that, merge the fix, and the new build goes to review.`);
+      else if (review === BEHIND) warn(`Build ${number} waits: another build of this version is in Beta App Review, and Apple takes one at a time. The daily TestFlight upkeep (.github/workflows/testflight.yml) submits the newest build once that one is decided; nothing to re-run by hand.`);
+      else note(`Beta App Review: ${plain(review)}.`);
+    }
+    try {
+      await addToGroup(group, build);
+      note(`Added to the "${GROUP_NAME}" group.`);
+    } catch (e) {
+      // Waiting behind another build, Apple may not take it into the group
+      // yet; the upkeep adds it once it is submitted.
+      if (review === BEHIND) warn(`Not in the "${GROUP_NAME}" group yet (${e.message}); the upkeep adds it after review.`);
+      else fail(`Could not add the build to the "${GROUP_NAME}" group: ${e.message}`);
+    }
+    const link = group.attributes.publicLink;
+    note(link ? `Public link: ${link}` : `The "${GROUP_NAME}" group has no public link yet.`);
   }
-  const link = group.attributes.publicLink;
-  note(link ? `Public link: ${link}` : `The "${GROUP_NAME}" group has no public link yet.`);
 } catch (e) {
   fail(`Stopped: ${e.message}`);
 }
 
 if (process.env.GITHUB_STEP_SUMMARY) {
-  appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## TestFlight\n\n${lines.map(l => `- ${l}`).join('\n')}\n`);
+  appendFileSync(process.env.GITHUB_STEP_SUMMARY, `## TestFlight${NEWEST ? ' upkeep' : ''}\n\n${lines.map(l => `- ${l}`).join('\n')}\n`);
 }
 process.exit(failed ? 1 : 0);
