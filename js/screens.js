@@ -3,8 +3,8 @@
 import * as E from './engine.js';
 import { getNote, setNote } from './store.js';
 import { mode, session, settings, saveSettings } from './state.js';
-import { $, body, fmtLeft } from './ui.js';
-import { faceLabel as pictureLabel, sessionTitle, runFigures, scheduleTimes, landingText, startLabel } from './words.js';
+import { $, body, fmtLeft, setLive, onActivate } from './ui.js';
+import { REVEAL_MS, faceLabel as pictureLabel, sessionTitle, runFigures, scheduleTimes, landingText, startLabel } from './words.js';
 import { renderSetup, labelChips, showRibbon, showError } from './setup.js';
 import { startSession, endSession, suggestedMinutes, syncWake } from './session.js';
 import { tick, faceName, faceSetting, requestPaint } from './draw.js';
@@ -221,15 +221,9 @@ export const faceLabel = now => pictureLabel(mode, session, now);
 let revealTimer;
 function reveal() {
   if (mode !== 'work' || !session) return;
-  $('reveal').textContent = '';
-  setTimeout(() => { $('reveal').textContent = fmtLeft(E.remaining(session)); }, 50);
+  setLive($('reveal'), fmtLeft(E.remaining(session)));
   $('reveal').classList.add('is-on');
   clearTimeout(revealTimer);
-  revealTimer = setTimeout(() => $('reveal').classList.remove('is-on'), 4000);
+  revealTimer = setTimeout(() => $('reveal').classList.remove('is-on'), REVEAL_MS);
 }
-$('face').addEventListener('click', reveal);
-$('face').addEventListener('keydown', e => {
-  if (e.key !== 'Enter' && e.key !== ' ') return;
-  e.preventDefault();
-  reveal();
-});
+onActivate($('face'), reveal);

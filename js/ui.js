@@ -32,8 +32,24 @@ for (const type of ['mouseleave', 'focusout']) $('toast').addEventListener(type,
 
 /* ---------- Live region ---------- */
 
+// A live region that changes too fast may not be read, so it is emptied
+// first and filled a moment later. The private reveal uses the same trick.
+export function setLive(el, text) {
+  el.textContent = '';
+  setTimeout(() => { el.textContent = text; }, 50);
+}
 export function announce(text) {
   if (!text) return;
-  $('live').textContent = '';
-  setTimeout(() => { $('live').textContent = text; }, 50);
+  setLive($('live'), text);
+}
+
+// A tap, a click, or Enter or Space on a control that isn't a <button> (the
+// Work-mode clock, on the page and in the floating window).
+export function onActivate(el, fn) {
+  el.addEventListener('click', fn);
+  el.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    fn();
+  });
 }

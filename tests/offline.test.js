@@ -15,6 +15,26 @@ test('every file in the offline list exists', () => {
   }
 });
 
+test('every file the page and the manifest refer to is in the offline list', () => {
+  const html = readFileSync(new URL('index.html', root), 'utf8');
+  const refs = [...html.matchAll(/(?:href|src)="([^"#:]+)"/g)].map(m => `./${m[1]}`);
+  const manifest = JSON.parse(readFileSync(new URL('manifest.webmanifest', root), 'utf8'));
+  for (const icon of manifest.icons) refs.push(`./${icon.src}`);
+  for (const path of refs) assert.ok(shell.includes(path), `${path} is used but not cached for offline use`);
+});
+
+// A changed file list needs a new CACHE name, or phones keep the old list. The
+// fingerprint of each list is recorded here with the name it shipped under;
+// when this fails, bump CACHE in sw.js and record the new pair.
+import { createHash } from 'node:crypto';
+const SHIPPED = { 'timefall-paper-2': '327ff94143df' };
+
+test('a changed offline list comes with a new CACHE name', () => {
+  const cache = sw.match(/const CACHE = '([^']+)'/)[1];
+  const print = createHash('sha256').update([...shell].sort().join('\n')).digest('hex').slice(0, 12);
+  assert.equal(SHIPPED[cache], print, `The offline list changed (fingerprint ${print}). Bump CACHE in sw.js, then record '<new name>': '${print}' in SHIPPED in this test.`);
+});
+
 test('every script and font is in the offline list', () => {
   const needed = [
     ...readdirSync(new URL('js/', root)).map(f => `./js/${f}`),

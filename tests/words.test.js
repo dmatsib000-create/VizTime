@@ -172,3 +172,7 @@ test('time left is worded in plain minutes and hours', () => {
   assert.equal(W.fmtLeft(60 * MIN), '1 h');
   assert.equal(W.fmtLeft(90 * MIN), '1 h 30 min');
 });
+
+test('Work mode: the private reveal lasts four seconds', () => {
+  assert.equal(W.REVEAL_MS, 4000);
+});

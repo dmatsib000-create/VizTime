@@ -2,8 +2,8 @@
 // and the picture-in-picture video. float.js opens and closes them.
 
 import { mode, session } from './state.js';
-import { $, toast } from './ui.js';
-import { floatText } from './words.js';
+import { $, toast, onActivate } from './ui.js';
+import { floatText, REVEAL_MS } from './words.js';
 import { faceLabel, mainLabel, startMain, extend } from './screens.js';
 import { togglePause, adjustBy, endSession } from './session.js';
 import { tick, lastTick, step, paint, paintVideo, faceModel, faceName, frameGap, paintRequests } from './draw.js';
@@ -97,17 +97,10 @@ export function buildFloat(doc) {
   doc.getElementById('pip-pause').addEventListener('click', togglePause);
   for (const b of doc.querySelectorAll('[data-padj]')) b.addEventListener('click', () => adjustBy(+b.dataset.padj));
   // In Work mode the clock can be tapped there too, or reached with the keyboard.
-  const revealFloat = () => {
+  onActivate(doc.getElementById('pip-face'), () => {
     if (mode !== 'work' || !session) return;
-    floatRevealUntil = Date.now() + 4000;
+    floatRevealUntil = Date.now() + REVEAL_MS;
     renderFloatText(Date.now());
-  };
-  const face = doc.getElementById('pip-face');
-  face.addEventListener('click', revealFloat);
-  face.addEventListener('keydown', e => {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
-    e.preventDefault();
-    revealFloat();
   });
 }
 

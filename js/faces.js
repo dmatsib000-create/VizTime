@@ -45,6 +45,7 @@ export function palette(root = document.documentElement) {
   };
 }
 
+// Reads only six-digit hex, which is how styles.css writes every colour token.
 function alpha(hex, a) {
   const n = parseInt(hex.replace('#', ''), 16);
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
