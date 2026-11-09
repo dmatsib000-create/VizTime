@@ -29,7 +29,7 @@ There are two ways to have TimeFall on a phone, and neither needs an account.
 2. Tap the **Share** button (the square with an arrow pointing up).
 3. Tap **Add to Home Screen**, then **Add**.
 
-It now has its own icon, opens full screen, and works without an internet connection once it has been opened once.
+It now has its own icon, opens full screen, and works without an internet connection once it has been opened once. On slow Wi-Fi it opens from the copy saved on your phone after about three seconds, and a Wi-Fi sign-in page (in a clinic, hotel or café) can't replace that copy.
 
 **Computer:** open the address in Chrome, Edge or Vivaldi. You can bookmark it, or use the browser's "Install" option if it offers one.
 

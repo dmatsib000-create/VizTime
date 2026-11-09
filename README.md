@@ -71,13 +71,19 @@ Then open http://localhost:8000.
 
 ## Tests
 
-The timer model, what the app says about time on every screen (including that Work mode only ever says "Session finished.", its tab is always "Day", and it shows lengths only as clock times), the reminders a phone schedules (including that Work mode schedules only "Session finished.") and which cues the page leaves to them, the faces' clock marks, how often they are drawn and that Work mode never offers the disc or the ruler, saved data and the codes that carry it, and the offline file list have tests that use Node's built-in runner, so there is nothing to install. With Node 20 or later:
+The timer model, what the app says about time on every screen (including that Work mode only ever says "Session finished.", its tab is always "Day", and it shows lengths only as clock times), the reminders a phone schedules (including that Work mode schedules only "Session finished.") and which cues the page leaves to them, the faces' clock marks, how often they are drawn and that Work mode never offers the disc or the ruler, saved data and the codes that carry it, and the offline file list and how the offline worker answers (a slow network, a server error, a Wi-Fi sign-in page, no network) have tests that use Node's built-in runner, so there is nothing to install. With Node 20 or later:
 
 ```bash
 node --test
 ```
 
-They also run on every pull request, after a check that every script parses; the two app workflows build the shells on pull requests too. When adding a file the app needs offline, list it in `SHELL` in `sw.js` and bump `CACHE`; the tests fail if a script or font is missing from the list.
+A second check loads the real page in headless Chrome, in each mode, and fails on any script error. It needs Node 22 and Chrome, and no packages:
+
+```bash
+node tests/browser-smoke.mjs
+```
+
+Both run on every pull request, after a check that every script parses; the two app workflows build the shells on pull requests too. When adding a file the app needs offline, list it in `SHELL` in `sw.js` and bump `CACHE`; the tests fail if a script or font is missing from the list.
 
 What the platforms allow (floating windows, sound after locking, keeping the screen awake) can only be checked on the devices themselves. [docs/device-tests.md](docs/device-tests.md) lists those tests; they use `check/`, a page that isn't part of the app.
 

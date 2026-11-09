@@ -159,13 +159,22 @@ function renderPresets() {
       presets = presets.filter(x => x !== p);
       save('presets', presets);
       renderPresets();
-      toast('Preset removed', () => { presets.splice(removed, 0, p); save('presets', presets); renderPresets(); });
+      toast('Preset removed', () => { presets.splice(removed, 0, p); save('presets', presets); renderPresets(); focusPresetRemove(removed); });
+      focusPresetRemove(removed);
     });
     li.append(start, del);
     return li;
   }));
   $('presets-empty').hidden = presets.length > 0;
   list.closest('.presets').classList.toggle('has-items', presets.length > 0);
+}
+
+// The button that had focus is gone after a remove (or an undo), so focus
+// moves to the remove button now in that place, the one before it, or Undo
+// when no presets are left: keyboard and VoiceOver users keep their place.
+function focusPresetRemove(index) {
+  const dels = $('preset-list').querySelectorAll('.preset-del');
+  (dels[Math.min(index, dels.length - 1)] || $('toast-undo')).focus();
 }
 
 $('setup-form').addEventListener('submit', e => {

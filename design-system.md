@@ -364,7 +364,7 @@ Every button below is a native `<button type="button">` (or `type="submit"` in a
 | Hover | Raised fill on the start button; × goes ink | — |
 | Work mode | No length | Work mode never shows a duration, so the length isn't written at all (`presetLength` in words.js) |
 
-**Accessibility.** Two buttons per row. The × has `aria-label="Remove preset …"` with the preset's name. Removing shows the toast with Undo for 10 seconds instead of asking first.
+**Accessibility.** Two buttons per row. The × has `aria-label="Remove preset …"` with the preset's name. Removing shows the toast with Undo for 10 seconds instead of asking first, and moves focus to the × now in that place (or the one before it, or Undo when none are left), so keyboard and VoiceOver users keep their place; Undo puts focus back on the restored preset's ×.
 
 ```html
 <li>

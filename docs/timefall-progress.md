@@ -24,6 +24,17 @@ The running record of turning VizTime into the TimeFall phone apps. Decisions an
 | TestFlight group "Friends" with its public link | Done: made by the first hand-off run on 8 November 2026; every later build joins it (build 14 on 9 November) | |
 | TestFlight test information (feedback email, review contact), then the first Beta App Review | Test information typed on 9 November 2026; build 14 was sent to Beta App Review the same day and is waiting for review | Apple, usually a day or two |
 | Owner's phone checklist | Not started | A TestFlight build |
+| Tech debt review of the web page and phone apps (9 November 2026): 17 items in four phases, tracked with their status on the owner's page [TimeFall Tech Debt](https://claude.ai/artifact/7pZr2ymrRgHizGUVaAL4MR) | Phase 1 (Work mode and correctness) merged as PR #36; Phase 2 (web robustness) in review | The phone checks in "Changes to watch" below |
+
+## Changes to watch
+
+A round of changes made close together on 9 November 2026. If something goes wrong on a phone or the web page, start here: each one says what it touched, what to try, and how to undo it. Every one is a single merge, so GitHub's **Revert** button on its pull request page makes a clean undo; merge that revert like any other pull request. A row leaves this table once a real phone has shown it works. The same list, with a status for each, is on the tracker page above.
+
+| Pull request | What it touched | Try on a phone | Since |
+|---|---|---|---|
+| #34 Android: steadier reminders and floating window (merge `549c96b`) | How reminders are set and taken back (`js/native.js`), on both phones: kept while the floating window closes, silent quiet channels on Android (new channel names; reverting leaves them, harmlessly), leftovers cleared at start, import links once per run | Android floating window: the finish arrives; close it, then grow it back. Work mode, tones off, locked: "Session finished." with no sound. Force-close mid-session and reopen: Float is there. iPhone: lock mid-session; each reminder arrives once | 9 Nov |
+| #36 Work mode and correctness (merge `70c6c83`) | Which cues the page leaves to the phone while floating (per cue now); Work mode's pictures; the warning rule (at most half the session, from the form too); the end time while paused; every screen's words about time moved into `js/words.js` | Work mode, floating, warning tone on: one warning tone from the page, one "Session finished." from the phone, nothing doubled. Each mode on the web reads as before | 9 Nov |
+| Phase 2: web robustness (this pull request) | How the offline worker answers (`sw.js`): a 3-second limit on the network, no saving of redirects or errors; the floating window's buttons call the main screen's actions directly; focus after removing a preset; the browser check in CI | The installed web app on weak or no Wi-Fi opens within a few seconds. The computer's floating window: Pause, −5, +5, and at the finish Start, +5 min and Done | 9 Nov |
 
 ## What only the owner can do, in order
 
