@@ -59,20 +59,28 @@ public class FloatingPlugin extends Plugin {
         });
     }
 
+    /**
+     * Answers only once the setting is in place. If Android won't take the
+     * params right now, the call is rejected, so the page (which sends the
+     * setting only when it changes) knows to send it again.
+     */
     @PluginMethod
     public void setAutoEnter(PluginCall call) {
         autoEnter = Boolean.TRUE.equals(call.getBoolean("enabled", false));
-        if (available() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            Activity activity = getActivity();
-            activity.runOnUiThread(() -> {
-                try {
-                    activity.setPictureInPictureParams(params());
-                } catch (IllegalStateException e) {
-                    // The activity isn't in a state to take params; the next call will set them.
-                }
-            });
+        if (!available() || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            // Android 8 to 11 read autoEnter in onUserLeaveHint; nothing else to set.
+            call.resolve();
+            return;
         }
-        call.resolve();
+        Activity activity = getActivity();
+        activity.runOnUiThread(() -> {
+            try {
+                activity.setPictureInPictureParams(params());
+                call.resolve();
+            } catch (IllegalStateException e) {
+                call.reject("The floating setting could not be applied right now.");
+            }
+        });
     }
 
     private PictureInPictureParams params() {

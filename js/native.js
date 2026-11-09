@@ -13,7 +13,7 @@
 import { isNative, platform } from './platform.js';
 import { load, save } from './store.js';
 import { mode, session, settings } from './state.js';
-import { plannedCues, CUE_IDS, phoneCarriesCues } from './cues.js';
+import { plannedCues, reconcileCues, CUE_IDS, phoneCarriesCues } from './cues.js';
 import { $, toast } from './ui.js';
 import { bringIn } from './menu.js';
 import { render } from './screens.js';
@@ -39,10 +39,13 @@ export function initNative() {
   // before its channel exists; the listeners are attached straight away.
   if (platform === 'android') queue = queue.then(makeChannels).catch(() => {});
   // Android says the app is no longer active only when it is stopped (gone to
-  // the background or closed), not while it floats.
+  // the background or closed), not while it floats. That is remembered, so a
+  // later sync never takes a stopped app for one in front, whatever the page
+  // itself reports.
   listen('App', 'appStateChange', ({ isActive }) => {
     leavingFloat = false;
-    syncBackgroundCues(!isActive || isFloating());
+    stopped = !isActive;
+    syncBackgroundCues();
   });
   document.addEventListener('visibilitychange', () => syncBackgroundCues());
   listen('App', 'appUrlOpen', ({ url }) => importFromUrl(url, false));
@@ -132,48 +135,41 @@ function toNotification(c, exact) {
 }
 
 // Runs one step at a time, so a quick leave-and-return never interleaves.
-// `scheduled` is what the phone holds, by cue id, so a call that changes
-// nothing (render() runs often, and leaving the app is reported twice) costs
-// nothing, and only reminders that changed are taken back or set.
+// `held` is what the phone holds, by cue id; reconcileCues (cues.js, tested)
+// works out what to change, so a call that changes nothing (render() runs
+// often, and leaving the app is reported twice) costs nothing.
 // `inFront` is null until the first call, which clears anything a previous
-// run of the app left behind.
-let queue = Promise.resolve(), scheduled = new Map(), inFront = null, leavingFloat = false;
+// run of the app left behind. `stopped` is Android's (and iOS's) word that
+// the app went out of sight; `leavingFloat` covers the moment between the
+// floating window closing and that word arriving.
+let queue = Promise.resolve(), held = {}, inFront = null, stopped = false, leavingFloat = false;
 export const isFloating = () => isNative && document.body.classList.contains('is-floating');
 // Whether the page leaves a cue's tone, vibration and voice to the phone's
 // reminder (cues.js): in Android's floating window, and on an iPhone whose
 // page is kept running out of sight by its floating picture (js/float.js).
-export const cuesHandedOff = () => isNative && phoneCarriesCues({ floating: isFloating(), hidden: document.hidden, armed: scheduled.size > 0 });
+export const cuesHandedOff = () => isNative && phoneCarriesCues({ floating: isFloating(), hidden: document.hidden, armed: Object.keys(held).length > 0 });
 
 const quietly = (method, options) => call('LocalNotifications', method, options).catch(() => undefined);
 const cancelIds = ids => (ids.length ? quietly('cancel', { notifications: ids.map(id => ({ id })) }) : undefined);
 
-export function syncBackgroundCues(hidden = document.hidden || isFloating() || leavingFloat) {
+export function syncBackgroundCues(hidden = document.hidden || stopped || isFloating() || leavingFloat) {
   if (!has('LocalNotifications')) return;
   queue = queue.then(async () => {
     const now = Date.now();
-    if (inFront === null) { await cancelIds(Object.values(CUE_IDS)); scheduled.clear(); }
+    if (inFront === null) { await cancelIds(Object.values(CUE_IDS)); held = {}; }
     if (!hidden) {
-      await cancelIds([...scheduled.keys()]);
-      scheduled.clear();
+      await cancelIds(Object.keys(held).map(Number));
+      held = {};
       // Arriving in front: a reminder that already fired has done its job; the page shows the same thing.
       if (inFront !== true) await quietly('removeAllDeliveredNotifications');
       inFront = true;
       return;
     }
     inFront = false;
-    const plan = plannedCues(mode, session, settings, now);
-    const stale = [];
-    for (const [id, was] of scheduled) {
-      const next = plan.find(c => c.id === id);
-      if (next && JSON.stringify(next) === was.key) continue;
-      // A reminder whose moment has come is left to arrive: the page, still
-      // drawing in the floating window, can reach that moment a little before
-      // the phone does, and taking it back then would lose it.
-      if (was.at > now) stale.push(id);
-      scheduled.delete(id);
-    }
-    await cancelIds(stale);
-    const fresh = plan.filter(c => !scheduled.has(c.id));
+    const change = reconcileCues(held, plannedCues(mode, session, settings, now), now);
+    await cancelIds(change.cancel);
+    held = change.kept;
+    const fresh = change.schedule;
     if (!fresh.length) return;
     // A check that fails isn't a refusal: the reminders are still set.
     const p = await quietly('checkPermissions');
@@ -183,7 +179,7 @@ export function syncBackgroundCues(hidden = document.hidden || isFloating() || l
       if (e) phone.exact = e.exact_alarm !== 'denied';
     }
     await call('LocalNotifications', 'schedule', { notifications: fresh.map(c => toNotification(c, phone.exact)) });
-    for (const c of fresh) scheduled.set(c.id, { at: c.at, key: JSON.stringify(c) });
+    for (const c of fresh) held[c.id] = c;
   }).catch(() => {});
 }
 
@@ -228,7 +224,8 @@ export async function floatNative() {
 
 // Android 12 and later can float on its own when the person leaves the app;
 // the shell is told whenever that should be on.
-// Told only when it changes: render() runs often.
+// Told only when it changes: render() runs often. If the shell couldn't take
+// it, the value is forgotten so the next call tries again.
 let autoFloat = null;
 export function setAutoFloat(on) {
   if (!has('Floating') || autoFloat === !!on) return;
