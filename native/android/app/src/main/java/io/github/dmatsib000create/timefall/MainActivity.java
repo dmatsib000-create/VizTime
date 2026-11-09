@@ -2,6 +2,8 @@ package io.github.dmatsib000create.timefall;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.PluginHandle;
 
@@ -12,6 +14,18 @@ public class MainActivity extends BridgeActivity {
         // TimeFall's own plugin, beside the installed ones: the floating window.
         registerPlugin(FloatingPlugin.class);
         super.onCreate(savedInstanceState);
+    }
+
+    // When the phone switches between light and dark while TimeFall is open, the shell re-applies
+    // the system-bar style it worked out at launch, so the clock and signal icons at the top could
+    // stay dark on the dark paper. Decide again from the new configuration, after the shell's turn.
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        boolean night = (newConfig.uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+        WindowInsetsControllerCompat bars = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        bars.setAppearanceLightStatusBars(!night);
+        bars.setAppearanceLightNavigationBars(!night);
     }
 
     private FloatingPlugin floating() {
