@@ -2,7 +2,7 @@
 
 The running record of turning VizTime into the TimeFall phone apps. Decisions and their reasons are in [docs/research/2026-11-07-timefall-native-apps.md](research/2026-11-07-timefall-native-apps.md). When the owner says "continue TimeFall", start here.
 
-*Last updated: 8 November 2026.*
+*Last updated: 9 November 2026.*
 
 ## Where things stand
 
@@ -19,7 +19,7 @@ The running record of turning VizTime into the TimeFall phone apps. Decisions an
 | Apple Developer Program enrollment | Done: purchased and approved on 8 November 2026 (US$99 a year; **expires 8 November 2027**, Apple emails before then) | |
 | App Store Connect: register the bundle id, create the app, make an Admin API key, note the Team ID | Done on 8 November 2026 | |
 | GitHub secrets for Apple (`APPSTORE_PRIVATE_KEY`, `APPSTORE_KEY_ID`, `APPSTORE_ISSUER_ID`, `APPLE_TEAM_ID`) | Done on 8 November 2026; the first upload used them | |
-| TestFlight group "Friends" with its public link | Done: made by the first hand-off run on 8 November 2026; build 12 is in it | |
+| TestFlight group "Friends" with its public link | Done: made by the first hand-off run on 8 November 2026; every later build joins it (build 14 on 9 November) | |
 | TestFlight test information (feedback email, review contact), then the first Beta App Review | Not started | **Owner** types the test information once (step 7); then the assistant re-runs the hand-off job; review takes a day or two |
 | Owner's phone checklist | Not started | A TestFlight build |
 
@@ -32,7 +32,7 @@ The running record of turning VizTime into the TimeFall phone apps. Decisions an
 5. Done. **Find the Team ID** at [developer.apple.com/account](https://developer.apple.com/account) → Membership details (expiry 8 November 2027).
 6. Done. **Add four repository secrets** at [github.com/dmatsib000-create/VizTime/settings/secrets/actions](https://github.com/dmatsib000-create/VizTime/settings/secrets/actions) → New repository secret: `APPSTORE_PRIVATE_KEY` (the whole text of the `.p8` file, opened in Notepad), `APPSTORE_KEY_ID`, `APPSTORE_ISSUER_ID`, `APPLE_TEAM_ID`. Say "secrets done".
 7. **Type the test information once**, at [appstoreconnect.apple.com/apps](https://appstoreconnect.apple.com/apps) → TimeFall → **TestFlight** tab → **Test Information** (left column): the Beta App Description is already filled by the build; type the **Feedback Email** (yours), and under **Beta App Review Information** your first name, last name, phone number and email. Leave "Sign-in required" off. Save. Say "test info done". (The group "Friends" and its public link are made by the build itself; nothing to create by hand.)
-8. Then the assistant re-runs the failed TestFlight job of run 42542034577 (`gh run rerun 42542034577 --failed`), which submits build 12 for Beta App Review (a day or two the first time), and sends the owner's phone checklist. When App Store Connect shows the build as approved, the assistant shows the link on the install page (`#testflight-link` loses `hidden`, `#testflight-soon` gains it).
+8. Then the assistant re-runs the failed TestFlight job of the latest iPhone run, 42576567615 (`gh run rerun 42576567615 --failed`), which submits build 14 for Beta App Review (a day or two the first time), and sends the owner's phone checklist. When App Store Connect shows the build as approved, the assistant shows the link on the install page (`#testflight-link` loses `hidden`, `#testflight-soon` gains it).
 
 ## The owner's phone checklist (once TimeFall is installed from TestFlight)
 
