@@ -14,12 +14,13 @@ The running record of turning VizTime into the TimeFall phone apps. Decisions an
 | Android signing key made and stored in repository secrets | Done | |
 | Android build and release workflow | Done: the first release, `android-v1.0.7`, was built, signed and published on 7 November 2026, and the install page's download link serves it | |
 | iPhone build and TestFlight workflow | Done: build 10 of 1.0.0 was signed in the cloud and uploaded on 8 November 2026, three minutes end to end. A second job then waits for Apple's processing, makes the external group "Friends" with a public link, submits the build for Beta App Review and adds it to the group (`native/scripts/testflight.mjs`) | |
-| Install page at `/install/` | Done, iPhone link pending | The public link, printed by the first run of the TestFlight job |
+| Install page at `/install/` | Done; the iPhone link is in the page but hidden until Apple approves a build, so a friend never meets an empty TestFlight page | Beta App Review |
 | Docs: README, guide, design system, CLAUDE.md | Done | |
 | Apple Developer Program enrollment | Done: purchased and approved on 8 November 2026 (US$99 a year; **expires 8 November 2027**, Apple emails before then) | |
 | App Store Connect: register the bundle id, create the app, make an Admin API key, note the Team ID | Done on 8 November 2026 | |
 | GitHub secrets for Apple (`APPSTORE_PRIVATE_KEY`, `APPSTORE_KEY_ID`, `APPSTORE_ISSUER_ID`, `APPLE_TEAM_ID`) | Done on 8 November 2026; the first upload used them | |
-| TestFlight test information (feedback email, review contact), then the first Beta App Review | Not started | **Owner** types the test information once (step 7); review takes a day or two |
+| TestFlight group "Friends" with its public link | Done: made by the first hand-off run on 8 November 2026; build 12 is in it | |
+| TestFlight test information (feedback email, review contact), then the first Beta App Review | Not started | **Owner** types the test information once (step 7); then the assistant re-runs the hand-off job; review takes a day or two |
 | Owner's phone checklist | Not started | A TestFlight build |
 
 ## What only the owner can do, in order
@@ -31,7 +32,7 @@ The running record of turning VizTime into the TimeFall phone apps. Decisions an
 5. Done. **Find the Team ID** at [developer.apple.com/account](https://developer.apple.com/account) → Membership details (expiry 8 November 2027).
 6. Done. **Add four repository secrets** at [github.com/dmatsib000-create/VizTime/settings/secrets/actions](https://github.com/dmatsib000-create/VizTime/settings/secrets/actions) → New repository secret: `APPSTORE_PRIVATE_KEY` (the whole text of the `.p8` file, opened in Notepad), `APPSTORE_KEY_ID`, `APPSTORE_ISSUER_ID`, `APPLE_TEAM_ID`. Say "secrets done".
 7. **Type the test information once**, at [appstoreconnect.apple.com/apps](https://appstoreconnect.apple.com/apps) → TimeFall → **TestFlight** tab → **Test Information** (left column): the Beta App Description is already filled by the build; type the **Feedback Email** (yours), and under **Beta App Review Information** your first name, last name, phone number and email. Leave "Sign-in required" off. Save. Say "test info done". (The group "Friends" and its public link are made by the build itself; nothing to create by hand.)
-8. Then the assistant re-runs the TestFlight job, which submits the build for Beta App Review (a day or two the first time), puts the public link on the install page, and sends the owner's phone checklist.
+8. Then the assistant re-runs the failed TestFlight job of run 42542034577 (`gh run rerun 42542034577 --failed`), which submits build 12 for Beta App Review (a day or two the first time), and sends the owner's phone checklist. When App Store Connect shows the build as approved, the assistant shows the link on the install page (`#testflight-link` loses `hidden`, `#testflight-soon` gains it).
 
 ## The owner's phone checklist (once TimeFall is installed from TestFlight)
 
@@ -53,7 +54,8 @@ Each line says what to try and what to tell the assistant if it is off.
 - The iPhone workflow has two jobs. If the second (TestFlight) fails, use **Re-run failed jobs**: it picks up the same build. "Re-run all jobs" would upload the same build number again, which Apple refuses.
 - The TestFlight group "Friends" has a public link capped at 25 testers (the install page is public); raise it in App Store Connect → TestFlight → Friends if friends outgrow it.
 - All eight secrets are set: four Android, four Apple.
-- The TestFlight link goes into `install/index.html` (`#testflight-link`, and hide `#testflight-soon`).
+- The TestFlight public link is `https://testflight.apple.com/join/SwUxmUAm` (group "Friends"). It is already the `href` of `#testflight-link` in `install/index.html`, hidden until the first approved build; then remove its `hidden` and hide `#testflight-soon`.
+- The App Store Connect record is named **TimeFall Timer** ("TimeFall" was taken); TestFlight lists it under that name, while the installed app is called TimeFall.
 - Tools on this PC: JDK 21 at `C:\Users\davem\Tools\jdk-21`; Android SDK at `C:\Users\davem\AppData\Local\Android\Sdk`; signing key backup at `C:\Users\davem\OneDrive\Documents\TimeFall-keys`. The PC's drive is nearly full; a local Gradle build needs over a gigabyte free.
 - `node --test` must keep passing; `cd native && npm run sync` gathers the web app before any shell build.
 - Apple enrollment, from Apple's own page: an order acknowledgement email arrives at purchase and a membership confirmation email once the purchase is processed; if no confirmation arrives within 24 hours, use [developer.apple.com/contact](https://developer.apple.com/contact/) and quote the Enrollment ID from the order email. Apple gives no other timescale; people report anything from a day to several weeks, longer when Apple asks for photo identification (it does when the card is not in the applicant's own name). Until the confirmation comes, nothing else on the Apple side can be done. The membership year, and so the renewal date, starts when Apple activates it: write that date here when the email arrives.
