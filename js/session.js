@@ -12,7 +12,7 @@ import { resetForm } from './setup.js';
 import { render } from './screens.js';
 import { frame } from './draw.js';
 import { closeFloat } from './pip.js';
-import { askForCues, vibrate, keepAwake, cuesHandedOff } from './native.js';
+import { askForCues, vibrate, keepAwake, cueHandedOff } from './native.js';
 
 const { MIN } = E;
 
@@ -116,8 +116,9 @@ export function playCue(cue) {
   const words = cueWords(mode, cue, session, Date.now());
   // In Android's floating window, and on an iPhone whose page runs on out of
   // sight under its floating picture, the phone's reminder carries the tone
-  // and the words (js/native.js, cues.js); the page only draws.
-  const handedOff = cuesHandedOff();
+  // and the words when it was given one for this cue (js/native.js, cues.js);
+  // then the page only draws. Otherwise the page plays the cue itself.
+  const handedOff = cueHandedOff(cue, E.cueTime(session, cue));
   if (c.sound && !handedOff) chime(cue, settings.volume, settings.silentTones);
   if (settings.vibrate && cue !== 'half' && !handedOff) vibrate(cue);
   if (c.speak && !handedOff) speak(words);

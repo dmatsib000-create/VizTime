@@ -31,11 +31,16 @@ export function untilMs(hhmm, bufferMin = 0, now = Date.now()) {
   return target.getTime() - bufferMin * MIN - now;
 }
 
+// A warning chosen by hand is kept to half the session at most, as the
+// automatic one is, so it never comes before the halfway cue. The form and
+// the presets both rely on this rather than clamping it themselves.
+export const clampWarning = (warnMs, totalMs) => Math.min(warnMs, totalMs / 2);
+
 export function createSession({ title = '', next = '', step = '', totalMs, warnMs, kind = 'main' }, now = Date.now()) {
   const s = {
     id: now.toString(36),
     title: title.trim(), next: next.trim(), step: step.trim(),
-    kind, totalMs, warnMs: warnMs ?? autoWarning(totalMs), autoWarn: warnMs == null,
+    kind, totalMs, warnMs: warnMs == null ? autoWarning(totalMs) : clampWarning(warnMs, totalMs), autoWarn: warnMs == null,
     endAt: now + totalMs, pausedAt: null, finishedAt: null, fired: {},
   };
   settle(s, now);
@@ -44,6 +49,11 @@ export function createSession({ title = '', next = '', step = '', totalMs, warnM
 
 export const remaining = (s, now = Date.now()) =>
   s.finishedAt ? 0 : Math.max(0, s.endAt - (s.pausedAt ?? now));
+
+// When the session will end. While paused the end moves on with the clock,
+// so the pictures, the schedule, the floating window and the screen-reader
+// label all show the same end.
+export const endsAt = (s, now = Date.now()) => (s.pausedAt ? s.endAt + (now - s.pausedAt) : s.endAt);
 
 export const fraction = (s, now) => Math.min(1, remaining(s, now) / s.totalMs);
 

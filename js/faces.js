@@ -17,6 +17,18 @@
 
 import { MIN } from './engine.js';
 
+// Which pictures each mode offers, and the setting each remembers its choice
+// in (Simple always has the disc). Only an offered picture is ever drawn,
+// whatever was saved: Work mode must never show the disc or the ruler, which
+// read as a timer, and tests/faces.test.js holds it to that.
+export const FACES = { work: ['planner', 'level', 'sun'], full: ['disc', 'level', 'sun', 'planner', 'ruler'], simple: ['disc'] };
+export const FACE_SETTING = { work: 'face', full: 'fullFace' };
+export function faceFor(mode, settings) {
+  const offered = FACES[mode] || FACES.simple;
+  const saved = settings[FACE_SETTING[mode]];
+  return offered.includes(saved) ? saved : offered[0];
+}
+
 // The same stacks as --serif and --mono in styles.css.
 export const SERIF = "Newsreader, Georgia, 'Times New Roman', serif";
 export const MONO = "'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace";

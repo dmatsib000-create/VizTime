@@ -13,7 +13,7 @@
 import { isNative, platform } from './platform.js';
 import { load, save } from './store.js';
 import { mode, session, settings } from './state.js';
-import { plannedCues, reconcileCues, CUE_IDS, phoneCarriesCues } from './cues.js';
+import { plannedCues, reconcileCues, CUE_IDS, phoneCarriesCue } from './cues.js';
 import { $, toast } from './ui.js';
 import { bringIn } from './menu.js';
 import { render } from './screens.js';
@@ -148,24 +148,30 @@ function toNotification(c, exact) {
 // run of the app left behind. `stopped` is Android's (and iOS's) word that
 // the app went out of sight; `leavingFloat` covers the moment between the
 // floating window closing and that word arriving.
-let queue = Promise.resolve(), held = {}, inFront = null, stopped = false, leavingFloat = false;
+// `arriving` is what the phone was handed and has left to arrive: a reminder
+// whose moment came while out of sight. The page may reach that cue a little
+// later (a hidden page is woken only now and then), and must still leave it
+// to the phone.
+let queue = Promise.resolve(), held = {}, arriving = [], inFront = null, stopped = false, leavingFloat = false;
 export const isFloating = () => isNative && document.body.classList.contains('is-floating');
 // Whether the page leaves a cue's tone, vibration and voice to the phone's
 // reminder (cues.js): in Android's floating window, and on an iPhone whose
 // page is kept running out of sight by its floating picture (js/float.js).
-export const cuesHandedOff = () => isNative && phoneCarriesCues({ floating: isFloating(), hidden: document.hidden, armed: Object.keys(held).length > 0 });
+const outOfSight = () => document.hidden || stopped || isFloating() || leavingFloat;
+export const cueHandedOff = (cue, at) => isNative && phoneCarriesCue({ cue, at, outOfSight: outOfSight(), handed: [...Object.values(held), ...arriving] });
 
 const quietly = (method, options) => call('LocalNotifications', method, options).catch(() => undefined);
 const cancelIds = ids => (ids.length ? quietly('cancel', { notifications: ids.map(id => ({ id })) }) : undefined);
 
-export function syncBackgroundCues(hidden = document.hidden || stopped || isFloating() || leavingFloat) {
+export function syncBackgroundCues(hidden = outOfSight()) {
   if (!has('LocalNotifications')) return;
   queue = queue.then(async () => {
     const now = Date.now();
-    if (inFront === null) { await cancelIds(Object.values(CUE_IDS)); held = {}; }
+    if (inFront === null) { await cancelIds(Object.values(CUE_IDS)); held = {}; arriving = []; }
     if (!hidden) {
       await cancelIds(Object.keys(held).map(Number));
       held = {};
+      arriving = [];
       // Arriving in front: a reminder that already fired has done its job; the page shows the same thing.
       if (inFront !== true) await quietly('removeAllDeliveredNotifications');
       inFront = true;
@@ -175,6 +181,7 @@ export function syncBackgroundCues(hidden = document.hidden || stopped || isFloa
     const change = reconcileCues(held, plannedCues(mode, session, settings, now), now);
     await cancelIds(change.cancel);
     held = change.kept;
+    arriving = [...arriving, ...change.arriving];
     const fresh = change.schedule;
     if (!fresh.length) return;
     // A check that fails isn't a refusal: the reminders are still set.
