@@ -1,6 +1,6 @@
 // Gathers the web app into native/www for Capacitor to copy into the shells.
 // The file list is the service worker's SHELL, so the native app ships exactly
-// what the web app caches offline, plus the maskable icon. No dependencies.
+// what the web app caches offline. No dependencies.
 import { mkdirSync, copyFileSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,7 +11,7 @@ const out = join(here, '..', 'www');
 
 const sw = readFileSync(join(root, 'sw.js'), 'utf8');
 const shell = JSON.parse(sw.match(/const SHELL = (\[[\s\S]*?\]);/)[1].replace(/'/g, '"').replace(/,\s*\]/, ']'));
-const files = [...new Set([...shell.filter(p => p !== './'), './icons/icon-maskable-512.png', './sw.js'])];
+const files = [...new Set([...shell.filter(p => p !== './'), './sw.js'])];
 
 rmSync(out, { recursive: true, force: true });
 for (const rel of files) {

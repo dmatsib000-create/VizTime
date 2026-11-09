@@ -55,6 +55,10 @@ export function notification(mode, cue, s, now) {
   return { title: `${s.title || 'Session'} finished`, body: s.next ? `Next: ${s.next}` : '' };
 }
 
+// How long the private reveal shows the time left in Work mode: four seconds,
+// on the page and in the floating window alike.
+export const REVEAL_MS = 4000;
+
 // The picture's label for screen readers. Work mode stays discreet: it is a
 // clock until asked, then the private reveal speaks the time left.
 export function faceLabel(mode, s, now) {
