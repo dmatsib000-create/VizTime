@@ -16,19 +16,19 @@ The running record of turning VizTime into the TimeFall phone apps. Decisions an
 | iPhone build and TestFlight workflow | Written; the compile check passed on CI (Xcode 26.6); the signed upload is untested until the Apple secrets exist | Apple Developer enrollment, then the App Store Connect app record and API key |
 | Install page at `/install/` | Done, iPhone link pending | The TestFlight public link |
 | Docs: README, guide, design system, CLAUDE.md | Done | |
-| Apple Developer Program enrollment | Purchased on 8 November 2026 (US$99 a year); Apple shows "enrollment pending" | **Apple's confirmation email**, then the owner says "enrolled" |
-| App Store Connect: register the bundle id, create the app, make an Admin API key, note the Team ID | Not started | Owner, after enrollment |
-| GitHub secrets for Apple (`APPSTORE_PRIVATE_KEY`, `APPSTORE_KEY_ID`, `APPSTORE_ISSUER_ID`, `APPLE_TEAM_ID`) | Not started | Owner pastes them (secrets are the owner's to type) |
+| Apple Developer Program enrollment | Done: purchased and approved on 8 November 2026 (US$99 a year; renews about 8 November 2027, exact date on Membership details) | |
+| App Store Connect: register the bundle id, create the app, make an Admin API key, note the Team ID | Not started | **Owner** (steps 2 to 5 below) |
+| GitHub secrets for Apple (`APPSTORE_PRIVATE_KEY`, `APPSTORE_KEY_ID`, `APPSTORE_ISSUER_ID`, `APPLE_TEAM_ID`) | Not started | **Owner** pastes them (step 6; secrets are the owner's to type) |
 | First iPhone upload, TestFlight test information, public link, Beta App Review | Not started | After the secrets; review takes a day or two |
 | Owner's phone checklist | Not started | A TestFlight build |
 
 ## What only the owner can do, in order
 
-1. **Enroll in the Apple Developer Program.** Done: purchased on 8 November 2026 as an individual; Apple showed "enrollment pending, you'll receive an email soon". Wait for Apple's confirmation email, then say "enrolled". If Apple's email asks for anything (photo identification, a call), do that first. If no confirmation has come within 24 hours of the purchase, Apple says to contact them (see the facts below).
+1. **Enroll in the Apple Developer Program.** Done on 8 November 2026 (individual membership, approved the same day).
 2. **Register the app id** at [developer.apple.com/account/resources/identifiers](https://developer.apple.com/account/resources/identifiers/list): + → App IDs → App → Description "TimeFall", Bundle ID *Explicit* `io.github.dmatsib000create.timefall`, no capabilities → Register.
 3. **Create the app record** at [appstoreconnect.apple.com/apps](https://appstoreconnect.apple.com/apps): + → New App → iOS, Name "TimeFall" (if taken, "TimeFall Timer"), Primary language English, Bundle ID the one above, SKU `timefall`, Full Access → Create.
 4. **Make an API key** at App Store Connect → Users and Access → Integrations → App Store Connect API → Team Keys → +: Name "GitHub builds", Access **Admin** → Generate. Download the `.p8` file (only offered once). Note the **Key ID** and the **Issuer ID** shown on that page.
-5. **Find the Team ID** at [developer.apple.com/account](https://developer.apple.com/account) → Membership details.
+5. **Find the Team ID** at [developer.apple.com/account](https://developer.apple.com/account) → Membership details. The same box shows the membership's expiry date; tell the assistant that date so the renewal is written down.
 6. **Add four repository secrets** at [github.com/dmatsib000-create/VizTime/settings/secrets/actions](https://github.com/dmatsib000-create/VizTime/settings/secrets/actions) → New repository secret: `APPSTORE_PRIVATE_KEY` (the whole text of the `.p8` file, opened in Notepad), `APPSTORE_KEY_ID`, `APPSTORE_ISSUER_ID`, `APPLE_TEAM_ID`. Say "secrets done".
 7. Then the assistant runs the iPhone workflow and watches it upload. When App Store Connect shows the build (10 to 30 minutes after upload): **TestFlight tab** → Test Information: Beta App Description ("A calm visual timer for time blindness and transitions. Try a session in each mode.") and Feedback Email (the owner's); → External Testing → + group "Friends" → enable **Public Link** → Add Build → submit. Beta App Review usually answers within a day or two. Copy the public link. Say "link: …".
 8. Then the assistant puts the link on the install page and sends the owner's phone checklist.
