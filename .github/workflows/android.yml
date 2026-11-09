@@ -73,6 +73,14 @@ jobs:
         run: npm run sync -- android
         working-directory: native
 
+      # Friends' phones only install updates signed with the same key, so a
+      # build for them without it must fail, not publish quietly unsigned.
+      - name: Stop if the signing key is missing
+        if: env.HAS_KEY != 'true' && github.event_name != 'pull_request'
+        run: |
+          echo "::error::The Android signing key secrets are missing, so this build can't be published. Add them back (native/README.md) and re-run."
+          exit 1
+
       - name: Unpack the signing key
         if: env.HAS_KEY == 'true' && github.event_name != 'pull_request'
         env:

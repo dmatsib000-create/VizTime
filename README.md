@@ -71,7 +71,7 @@ Then open http://localhost:8000.
 
 ## Tests
 
-The timer model, what the app says about time on every screen (including that Work mode only ever says "Session finished.", its tab is always "Day", and it shows lengths only as clock times), the reminders a phone schedules (including that Work mode schedules only "Session finished.") and which cues the page leaves to them, the faces' clock marks, how often they are drawn and that Work mode never offers the disc or the ruler, saved data and the codes that carry it, and the offline file list and how the offline worker answers (a slow network, a server error, a Wi-Fi sign-in page, no network) have tests that use Node's built-in runner, so there is nothing to install. With Node 20 or later:
+The timer model, what the app says about time on every screen (including that Work mode only ever says "Session finished.", its tab is always "Day", and it shows lengths only as clock times), the reminders a phone schedules (including that Work mode schedules only "Session finished.") and which cues the page leaves to them, the faces' clock marks, how often they are drawn and that Work mode never offers the disc or the ruler, saved data and the codes that carry it, the offline file list and how the offline worker answers (a slow network, a server error, a Wi-Fi sign-in page, no network), and the iPhone hand-off to TestFlight (against a stand-in App Store Connect) have tests that use Node's built-in runner, so there is nothing to install. With Node 20 or later:
 
 ```bash
 node --test
