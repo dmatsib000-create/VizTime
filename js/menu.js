@@ -31,7 +31,8 @@ function matchBundle() {
 function floatHint() {
   if (canFloatNative()) return 'While a session runs, choose Float at the top. TimeFall shrinks to a small window that stays over your other apps, with the picture and what comes next.';
   if (isNative && platform === 'android') return 'This phone has no floating window. TimeFall keeps the screen awake instead, and its reminders reach the lock screen.';
-  if (isNative) return 'iPhone apps can’t keep a small window over other apps. TimeFall keeps the screen awake while a session runs, and its reminders reach the Lock Screen.';
+  if (isNative && canFloatVideo()) return 'While a session runs, choose Float at the top, then switch to another app or go to the Home Screen. The picture floats as a small video over whatever you do. It can’t pause or adjust the session; tap it for the button that returns to TimeFall.';
+  if (isNative) return 'This iPhone can’t keep a small window over other apps. TimeFall keeps the screen awake while a session runs, and its reminders reach the Lock Screen.';
   if (canFloatWindow()) return 'While a session runs, choose Float at the top. A small window stays on top of your other apps, with the picture and a few controls.';
   if (canFloatVideo()) return 'While a session runs, choose Float at the top. The picture floats as a small video above other apps. It can’t be tapped, and the phone may pause it while TimeFall is in the background.';
   if (inIosHomeScreenApp()) return 'The floating view works when TimeFall is open in Safari, not from the Home Screen. Apple doesn’t support it in home-screen apps yet.';
@@ -182,7 +183,7 @@ $('m-copy').addEventListener('click', async () => {
     try { copied = document.execCommand('copy'); } catch { /* then the code is selected, ready to copy */ }
   }
   $('m-data-saved').textContent = copied
-    ? (isNative ? 'Copied.' : 'Copied. In the TimeFall app, open Menu → Your data, paste it and choose Bring in.')
+    ? (isNative ? 'Copied. On the other device, open Menu → Your data, paste it and choose Bring in.' : 'Copied. In the TimeFall app, open Menu → Your data, paste it and choose Bring in.')
     : 'The code is selected above. Copy it.';
   if (isPhoneWeb) {
     $('m-open-app').href = `timefall://import?code=${code}`;
@@ -192,7 +193,9 @@ $('m-copy').addEventListener('click', async () => {
 $('m-paste').addEventListener('click', () => bringIn($('m-code').value));
 
 // A code pasted here, or arriving by link (js/native.js). The page reloads so
-// every part of it reads the new data.
+// every part of it reads the new data. The answer is written into the sheet
+// as well as the toast: while the sheet is open as a modal, the toast sits
+// dimmed behind it, and a code pasted into the sheet seemed to do nothing.
 export function bringIn(code) {
   let result;
   try {
@@ -206,7 +209,13 @@ export function bringIn(code) {
   if (result.presets) parts.push(`${result.presets} preset${result.presets === 1 ? '' : 's'}`);
   if (result.notes) parts.push(`${result.notes} note${result.notes === 1 ? '' : 's'}`);
   if (result.settings) parts.push('settings');
-  if (!parts.length) { toast('Nothing new in that code'); return; }
-  toast(`Brought in ${parts.join(', ')}`);
+  if (!parts.length) {
+    $('m-data-saved').textContent = 'Nothing new in that code.';
+    toast('Nothing new in that code');
+    return;
+  }
+  const what = `Brought in ${parts.join(', ')}`;
+  $('m-data-saved').textContent = `${what}.`;
+  toast(what);
   setTimeout(() => location.reload(), 1200);
 }

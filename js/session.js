@@ -12,7 +12,7 @@ import { resetForm } from './setup.js';
 import { render } from './screens.js';
 import { frame } from './draw.js';
 import { closeFloat } from './pip.js';
-import { askForCues, vibrate, keepAwake, isFloating } from './native.js';
+import { askForCues, vibrate, keepAwake, cuesHandedOff } from './native.js';
 
 const { MIN } = E;
 
@@ -114,12 +114,13 @@ $('stop-btn').addEventListener('click', stopSession);
 export function playCue(cue) {
   const c = settings.cues[cue] || {};
   const words = cueWords(mode, cue, session, Date.now());
-  // In Android's floating window the phone's reminder carries the tone and
-  // the words (js/native.js); the page only draws.
-  const floating = isFloating();
-  if (c.sound && !floating) chime(cue, settings.volume, settings.silentTones);
-  if (settings.vibrate && cue !== 'half' && !floating) vibrate(cue);
-  if (c.speak && !floating) speak(words);
+  // In Android's floating window, and on an iPhone whose page runs on out of
+  // sight under its floating picture, the phone's reminder carries the tone
+  // and the words (js/native.js, cues.js); the page only draws.
+  const handedOff = cuesHandedOff();
+  if (c.sound && !handedOff) chime(cue, settings.volume, settings.silentTones);
+  if (settings.vibrate && cue !== 'half' && !handedOff) vibrate(cue);
+  if (c.speak && !handedOff) speak(words);
   if (cue !== 'half') announce(words || '');
   if (cue !== 'half') notify(cue);
 }

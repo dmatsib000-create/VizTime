@@ -1,25 +1,30 @@
 // Floating views.
 // Desktop Chrome and Edge: Document Picture-in-Picture, a real always-on-top
 // mini window that holds live, tappable page content.
-// Elsewhere (Safari, iPhone): a picture-in-picture video of the face, drawn
-// into a canvas and streamed. It floats over other apps but can't be tapped,
-// and iOS may freeze it while the app is in the background.
+// Elsewhere (Safari, and the iPhone app): a picture-in-picture video of the
+// face, drawn into a canvas and streamed. It floats over other apps but can't
+// be tapped, and iOS may freeze it while the page is in the background.
 
-import { isNative } from './platform.js';
+import { isNative, platform } from './platform.js';
 
-// The phone shells have their own floating view (js/native.js), so neither
-// browser kind applies inside them.
+// The web page's always-on-top window. The Android shell has its own floating
+// view (js/native.js); the iPhone shell takes the video route below.
 export const canFloatWindow = () => !isNative && 'documentPictureInPicture' in window;
 
 // An iPhone home-screen app refuses picture-in-picture although it reports it
 // as available; a Safari tab allows it (WebKit bug 303885, device test 7).
 // The display-mode half also covers a Mac Safari web app, which is untested.
-export const inIosHomeScreenApp = () => navigator.standalone === true
+// The iPhone app is a full app with its own permits, so it is never this case.
+export const inIosHomeScreenApp = () => !isNative && (navigator.standalone === true
   || (matchMedia('(display-mode: standalone)').matches
-    && typeof HTMLVideoElement.prototype.webkitSetPresentationMode === 'function');
+    && typeof HTMLVideoElement.prototype.webkitSetPresentationMode === 'function'));
 
+// Safari, and the iPhone app: its web view is the same engine inside a full
+// app, which has the picture-in-picture permit the home-screen container
+// lacks, and native/ios declares the background mode that keeps the video
+// running out of sight. Android's shell floats the whole page instead.
 export function canFloatVideo() {
-  if (isNative || inIosHomeScreenApp()) return false;
+  if ((isNative && platform !== 'ios') || inIosHomeScreenApp()) return false;
   const v = document.createElement('video');
   return !!(document.pictureInPictureEnabled || typeof v.webkitSetPresentationMode === 'function')
     && typeof HTMLCanvasElement.prototype.captureStream === 'function';

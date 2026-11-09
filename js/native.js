@@ -13,7 +13,7 @@
 import { isNative, platform } from './platform.js';
 import { load, save } from './store.js';
 import { mode, session, settings } from './state.js';
-import { plannedCues, CUE_IDS } from './cues.js';
+import { plannedCues, CUE_IDS, phoneCarriesCues } from './cues.js';
 import { $, toast } from './ui.js';
 import { bringIn } from './menu.js';
 
@@ -37,7 +37,7 @@ export async function initNative() {
   listen('App', 'appStateChange', ({ isActive }) => syncBackgroundCues(!isActive));
   document.addEventListener('visibilitychange', () => syncBackgroundCues(document.hidden));
   listen('App', 'appUrlOpen', ({ url }) => importFromUrl(url));
-  call('App', 'getLaunchUrl').then(r => r?.url && importFromUrl(r.url)).catch(() => {});
+  call('App', 'getLaunchUrl').then(r => r?.url && importFromUrl(r.url, true)).catch(() => {});
   // In Android's floating window the page keeps drawing, but its cues are
   // handed to the phone: a swipe that closes the window ends the activity
   // before the page could schedule anything, so the reminders are set while
@@ -107,6 +107,10 @@ function toNotification(c, exact) {
 // from render() cost nothing while the app is in front.
 let queue = Promise.resolve(), armed = false;
 export const isFloating = () => isNative && document.body.classList.contains('is-floating');
+// Whether the page leaves a cue's tone, vibration and voice to the phone's
+// reminder (cues.js): in Android's floating window, and on an iPhone whose
+// page is kept running out of sight by its floating picture (js/float.js).
+export const cuesHandedOff = () => isNative && phoneCarriesCues({ floating: isFloating(), hidden: document.hidden, armed });
 
 export function syncBackgroundCues(hidden = document.hidden || isFloating()) {
   if (!has('LocalNotifications')) return;
@@ -182,10 +186,17 @@ export function setAutoFloat(on) {
 /* ---------- Presets and settings arriving by link ---------- */
 
 // The web page offers "Open in the TimeFall app" with the code in the link.
+// A link arriving while the app runs is always brought in, so tapping it a
+// second time still gets an answer. The launch link is the exception: the
+// shell reports it for as long as the app lives, so after the reload that
+// follows an import it must not be brought in again. `seen` covers a cold
+// start, where one link arrives both as an event and as the launch link.
 let lastCode = load('lastImport', '');
-function importFromUrl(url) {
+const seen = new Set();
+function importFromUrl(url, launch = false) {
   const m = /^timefall:\/\/import[^A-Za-z]*(?:code=)?(TF1\.[A-Za-z0-9_-]+)/.exec(url || '');
-  if (!m || m[1] === lastCode) return;
+  if (!m || seen.has(m[1]) || (launch && m[1] === lastCode)) return;
+  seen.add(m[1]);
   lastCode = m[1];
   save('lastImport', lastCode);
   bringIn(m[1]);

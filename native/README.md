@@ -13,7 +13,7 @@ TimeFall's iPhone and Android apps are the web app one folder up, wrapped by [Ca
 | `scripts/make-icons.mjs` | Draws the icon and splash sources in `assets/` from one SVG; `npm run icons` then fills both platforms. |
 | `scripts/testflight.mjs` | Run by the iPhone workflow after an upload: waits for App Store Connect to process the build, writes "What to Test", makes sure the external group "Friends" exists with a public link, submits the build for Beta App Review and adds it to the group. Talks to the App Store Connect API with the workflow's key; no dependencies. |
 | `android/` | The Android project. TimeFall's own code: `FloatingPlugin.java` (the floating window), `MainActivity.java`, the manifest, `build.gradle` (versions and signing from the workflow's environment), the tones in `res/raw`, the status-bar icon, and the paper colours behind the page (`res/values/colors.xml`, with a night version) so the strips the shell keeps clear of the system bars match the page. |
-| `ios/` | The Xcode project. TimeFall's own code: `AppDelegate.swift` copies the tones where iOS can play them; `Info.plist` declares the `timefall://` link and answers the export-compliance question. |
+| `ios/` | The Xcode project. TimeFall's own code: `AppDelegate.swift` copies the tones where iOS can play them; `Info.plist` declares the `timefall://` link, the "Audio, AirPlay and Picture in Picture" background mode that lets the floating picture (the page's picture-in-picture video, `js/float.js`) keep running once the app is out of sight, and answers the export-compliance question. |
 
 `www/` and `node_modules/` are generated and not committed.
 

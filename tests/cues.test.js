@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as E from '../js/engine.js';
-import { plannedCues, CUE_IDS } from '../js/cues.js';
+import { plannedCues, CUE_IDS, phoneCarriesCues } from '../js/cues.js';
 
 const { MIN } = E;
 const T0 = new Date(2026, 10, 1, 14, 0).getTime(); // 2:00 PM local
@@ -75,4 +75,15 @@ test('Work mode: only "Session finished.", with nothing under it, whatever the t
       assert.doesNotMatch(plan[0].title + plan[0].body, /\d|timer|min/i);
     }
   }
+});
+
+test('the page stays quiet only where a reminder will sound instead', () => {
+  // Android's floating window: the phone carries the cue, whatever else is true.
+  assert.equal(phoneCarriesCues({ floating: true }), true);
+  // An iPhone out of sight with its picture floating: only once reminders are scheduled.
+  assert.equal(phoneCarriesCues({ hidden: true, armed: true }), true);
+  assert.equal(phoneCarriesCues({ hidden: true, armed: false }), false);
+  // In front, the page plays its own cues, scheduled reminders or not.
+  assert.equal(phoneCarriesCues({ hidden: false, armed: true }), false);
+  assert.equal(phoneCarriesCues(), false);
 });
