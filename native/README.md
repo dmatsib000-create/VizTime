@@ -11,6 +11,7 @@ TimeFall's iPhone and Android apps are the web app one folder up, wrapped by [Ca
 | `scripts/collect-web.mjs` | Copies the web app into `www/` from the service worker's file list, plus the reminder tones. No dependencies. |
 | `scripts/make-sounds.mjs` | Renders the three reminder tones as WAV files (the same bells as `js/sound.js`). |
 | `scripts/make-icons.mjs` | Draws the icon and splash sources in `assets/` from one SVG; `npm run icons` then fills both platforms. |
+| `scripts/testflight.mjs` | Run by the iPhone workflow after an upload: waits for App Store Connect to process the build, writes "What to Test", makes sure the external group "Friends" exists with a public link, submits the build for Beta App Review and adds it to the group. Talks to the App Store Connect API with the workflow's key; no dependencies. |
 | `android/` | The Android project. TimeFall's own code: `FloatingPlugin.java` (the floating window), `MainActivity.java`, the manifest, `build.gradle` (versions and signing from the workflow's environment), the tones in `res/raw`, the status-bar icon. |
 | `ios/` | The Xcode project. TimeFall's own code: `AppDelegate.swift` copies the tones where iOS can play them; `Info.plist` declares the `timefall://` link and answers the export-compliance question. |
 
@@ -35,6 +36,10 @@ cd native/android && ./gradlew assembleDebug
 ```
 
 iOS needs a Mac with Xcode 26: open `native/ios/App/App.xcodeproj`.
+
+## The iPhone workflow's two jobs
+
+[ios.yml](../.github/workflows/ios.yml) builds and uploads on a Mac runner, then a second, cheap job runs `scripts/testflight.mjs`. If that second job fails (Apple still processing, or test information the owner has yet to type in App Store Connect), use **Re-run failed jobs**: it picks up the same build. "Re-run all jobs" would upload the same build number again, which Apple refuses. The job's summary shows the public link.
 
 ## Versions
 

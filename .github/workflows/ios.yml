@@ -1,9 +1,16 @@
 # The iPhone app: built on GitHub's Mac from the web app and the shell in
 # native/ios, signed with Apple's cloud signing through an App Store Connect
-# API key, and uploaded to TestFlight. Without the Apple secrets (before the
-# account exists, or on a pull request) it only compiles the shell, to prove
-# that still works. The schedule rebuilds every two months, because a
-# TestFlight build stops working 90 days after upload.
+# API key, uploaded to TestFlight, and then handed to the "Friends" group
+# there (native/scripts/testflight.mjs), so a friend's phone gets every
+# build without anyone opening App Store Connect. Without the Apple secrets
+# (before the account exists, or on a pull request) it only compiles the
+# shell, to prove that still works. The schedule rebuilds every two months,
+# because a TestFlight build stops working 90 days after upload.
+#
+# If the TestFlight job fails (App Store Connect still processing, or test
+# information the owner has yet to type), use "Re-run failed jobs": it picks
+# up the same build. "Re-run all jobs" would upload the same build number
+# again, which Apple refuses.
 name: iPhone app
 
 on:
@@ -40,6 +47,11 @@ concurrency:
   group: ios-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  # The run number only ever grows, so each build is newer than the last.
+  BUILD_NUMBER: ${{ github.run_number }}
+  MARKETING_VERSION: '1.0.0'
+
 jobs:
   build:
     name: Build and upload to TestFlight
@@ -47,8 +59,8 @@ jobs:
     timeout-minutes: 60
     env:
       HAS_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY != '' && secrets.APPSTORE_KEY_ID != '' && secrets.APPSTORE_ISSUER_ID != '' && secrets.APPLE_TEAM_ID != '' }}
-      BUILD_NUMBER: ${{ github.run_number }}
-      MARKETING_VERSION: '1.0.0'
+    outputs:
+      uploaded: ${{ steps.upload.outputs.uploaded }}
     steps:
       - uses: actions/checkout@v4
 
@@ -93,6 +105,7 @@ jobs:
           CODE_SIGNING_ALLOWED=NO archive -quiet
 
       - name: Sign and upload to TestFlight
+        id: upload
         if: env.HAS_KEY == 'true' && github.event_name != 'pull_request'
         env:
           APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
@@ -125,4 +138,30 @@ jobs:
             -authenticationKeyID "$APPSTORE_KEY_ID" \
             -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID"
           rm -f ~/private_keys/AuthKey_"$APPSTORE_KEY_ID".p8
+          echo "uploaded=true" >> "$GITHUB_OUTPUT"
           echo "Uploaded build $BUILD_NUMBER of TimeFall $MARKETING_VERSION to App Store Connect."
+
+  # App Store Connect takes a few minutes to process an upload; this job
+  # waits for that on a cheap runner, then adds the build to the Friends
+  # group and submits it for Beta App Review. Its summary shows the public
+  # link friends use.
+  testflight:
+    name: Hand the build to the Friends group
+    needs: build
+    if: needs.build.outputs.uploaded == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Wait for App Store Connect, then add the build to the group
+        working-directory: native
+        env:
+          APPSTORE_PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: node scripts/testflight.mjs

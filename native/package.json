@@ -7,7 +7,8 @@
     "collect": "node scripts/collect-web.mjs",
     "sync": "node scripts/collect-web.mjs && cap sync",
     "icons": "node scripts/make-icons.mjs && capacitor-assets generate --iconBackgroundColor #EFEAE0 --iconBackgroundColorDark #1E1C19 --splashBackgroundColor #EFEAE0 --splashBackgroundColorDark #1E1C19",
-    "sounds": "node scripts/make-sounds.mjs"
+    "sounds": "node scripts/make-sounds.mjs",
+    "testflight": "node scripts/testflight.mjs"
   },
   "dependencies": {
     "@capacitor-community/keep-awake": "^8.0.1",
