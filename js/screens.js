@@ -123,10 +123,12 @@ export function renderRun(now = Date.now()) {
 /* ---------- Finish screen ---------- */
 
 // The main start button; in Work mode it names an end time, which moves with the clock.
+// The floating window offers the same button, with the same label (pip.js).
+let nextMinutes = 25;
+export const mainLabel = now => startLabel(mode, session.next, nextMinutes, now);
 export function labelMain(now) {
   if (!session || !session.next) return;
-  const m = +$('l-main').dataset.min || 25;
-  $('l-main').textContent = startLabel(mode, session.next, m, now);
+  $('l-main').textContent = mainLabel(now);
 }
 
 function renderLanding() {
@@ -141,7 +143,7 @@ function renderLanding() {
   showRibbon('l-ribbon', 'l-ribbon-text', hasNext ? s.next : '');
 
   $('l-start').hidden = !hasNext;
-  if (hasNext) $('l-main').dataset.min = suggestedMinutes(s.next);
+  if (hasNext) nextMinutes = suggestedMinutes(s.next);
   labelMain(Date.now());
   $('l-start-label').textContent = work ? 'Or until' : 'Or another length';
   labelChips(Date.now());
@@ -160,7 +162,9 @@ function renderLanding() {
 for (const c of $('l-chips').children) {
   c.addEventListener('click', () => startNext(+c.dataset.min));
 }
-$('l-main').addEventListener('click', () => startNext(+$('l-main').dataset.min));
+// What the finish screen's buttons do, shared with the floating window's (pip.js).
+export const startMain = () => startNext(nextMinutes);
+$('l-main').addEventListener('click', startMain);
 $('l-form').addEventListener('submit', e => {
   e.preventDefault();
   const m = parseInt($('l-minutes').value, 10);
@@ -173,12 +177,11 @@ $('l-minutes').addEventListener('input', () => showError('l-error'));
 function startNext(minutes) {
   startSession({ title: session.next, totalMs: minutes * MIN });
 }
-for (const b of document.querySelectorAll('[data-extend]')) {
-  b.addEventListener('click', () => {
-    const s = session;
-    startSession({ title: s.title, next: s.next, step: s.step, totalMs: +b.dataset.extend * MIN, kind: 'extension' });
-  });
+export function extend(minutes) {
+  const s = session;
+  startSession({ title: s.title, next: s.next, step: s.step, totalMs: minutes * MIN, kind: 'extension' });
 }
+for (const b of document.querySelectorAll('[data-extend]')) b.addEventListener('click', () => extend(+b.dataset.extend));
 $('l-done').addEventListener('click', endSession);
 
 // Notes save as you type; they are shown the next time that activity starts.

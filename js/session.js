@@ -86,20 +86,21 @@ export function onFinished(cued = false) {
   }
 }
 
-$('pause-btn').addEventListener('click', () => {
+// The running controls, shared by the main screen and the floating window (pip.js).
+export function togglePause() {
   if (!session) return;
   if (session.pausedAt) E.resume(session); else E.pause(session);
   persist();
   render();
-});
-for (const b of document.querySelectorAll('[data-adj]')) {
-  b.addEventListener('click', () => {
-    if (!session) return;
-    E.adjust(session, +b.dataset.adj * MIN);
-    persist();
-    if (session.finishedAt) onFinished(); else render();
-  });
 }
+export function adjustBy(minutes) {
+  if (!session) return;
+  E.adjust(session, minutes * MIN);
+  persist();
+  if (session.finishedAt) onFinished(); else render();
+}
+$('pause-btn').addEventListener('click', togglePause);
+for (const b of document.querySelectorAll('[data-adj]')) b.addEventListener('click', () => adjustBy(+b.dataset.adj));
 $('finish-btn').addEventListener('click', () => {
   if (!session) return;
   E.finishNow(session);
