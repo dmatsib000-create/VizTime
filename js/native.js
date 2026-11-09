@@ -35,9 +35,10 @@ export const phone = {
 
 export function initNative() {
   if (!isNative) return;
-  // The channels go first in the reminder queue, so nothing is scheduled
-  // before its channel exists; the listeners are attached straight away.
-  if (platform === 'android') queue = queue.then(makeChannels).catch(() => {});
+  // The channels are made at once (and a reminder waits for them, so nothing
+  // is scheduled before its channel exists); the listeners are attached
+  // straight away.
+  channelsReady();
   // Android says the app is no longer active only when it is stopped (gone to
   // the background or closed), not while it floats. That is remembered, so a
   // later sync never takes a stopped app for one in front, whatever the page
@@ -117,6 +118,11 @@ async function makeChannels() {
   for (const vibrate of [false, true]) made.push(call('LocalNotifications', 'deleteChannel', { id: channelId('quiet', vibrate) }));
   await Promise.allSettled(made);
 }
+// Made once per run. app.js renders before initNative runs, and render()
+// already syncs the reminders, so the first schedule can come before
+// initNative; it waits here instead of finding no channel.
+let channels = null;
+const channelsReady = () => (platform === 'android' ? (channels ||= makeChannels().catch(() => {})) : undefined);
 
 // `exact` is false when Android has had exact timing turned off for the app:
 // asking for an exact alarm then would open the phone's settings screen in
@@ -178,6 +184,7 @@ export function syncBackgroundCues(hidden = document.hidden || stopped || isFloa
       const e = await quietly('checkExactNotificationSetting');
       if (e) phone.exact = e.exact_alarm !== 'denied';
     }
+    await channelsReady();
     await call('LocalNotifications', 'schedule', { notifications: fresh.map(c => toNotification(c, phone.exact)) });
     for (const c of fresh) held[c.id] = c;
   }).catch(() => {});
