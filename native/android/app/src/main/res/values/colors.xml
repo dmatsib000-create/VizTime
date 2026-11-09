@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The page's paper (styles.css, "paper"). The window is painted with it, so the strips
+         the shell keeps clear of the status and navigation bars match the page, and so does
+         the moment before the page has painted. The night version is in values-night. -->
+    <color name="paper">#EFEAE0</color>
+</resources>
