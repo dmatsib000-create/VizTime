@@ -20,7 +20,7 @@ It's calm on purpose: muted paper colours, no alarms, no scores and no cheerful 
 
 There are two ways to have TimeFall on a phone, and neither needs an account.
 
-**The TimeFall app** (iPhone and Android) is the best one: it can remind you with a soft tone while your phone is locked or you're in another app, it can vibrate, it keeps the screen on, and on Android it can float in a small window over other apps. The steps are on one page: https://dmatsib000-create.github.io/VizTime/install/ (iPhone: through Apple's TestFlight app; Android: a download).
+**The TimeFall app** (iPhone and Android) is the best one: it can remind you with a soft tone while your phone is locked or you're in another app, it can vibrate, it keeps the screen on, and it can float over other apps: on Android as a small window of the whole app, on iPhone as a small floating picture. The steps are on one page: https://dmatsib000-create.github.io/VizTime/install/ (iPhone: through Apple's TestFlight app; Android: a download).
 
 **The web page** works on any phone or computer and needs nothing installed. It can't remind you while the phone is locked.
 
@@ -160,7 +160,9 @@ On a computer, tap **Float** to open a small window that stays on top of everyth
 
 In the Android app, **Float** shrinks TimeFall into a small window that stays over whatever else you do, showing the picture and what comes next; tap it to come back. **Menu → Floating view** can make it float on its own whenever you leave the app during a session.
 
-The iPhone app has no floating window, because iOS only allows one for video. It keeps the screen on while a session runs, and its reminders reach the Lock Screen. On an iPhone, the web page's **Float** works only when TimeFall is open in Safari, not from the Home Screen, because Apple doesn't support it in home-screen apps yet. In Safari it shows the picture as a small floating video over other apps. You can't tap it, and the iPhone may freeze it while you're in another app. Treat it as an experiment.
+In the iPhone app, **Float** shows the picture as a small floating video that stays over other apps and the Home Screen. You can't pause or adjust from it; tap it for the button that brings TimeFall back. The app keeps the screen on while a session runs too, and its reminders reach the Lock Screen. This is new: if the floating picture stops moving while you're in another app, the time is still right inside the app and in the Lock Screen reminders.
+
+On an iPhone, the web page's **Float** works only when TimeFall is open in Safari, not from the Home Screen, because Apple doesn't support it in home-screen apps yet. In Safari it shows the same small floating video. You can't tap it, and the iPhone may freeze it while you're in another app. Treat it as an experiment.
 
 ## What works where
 
@@ -172,7 +174,7 @@ The iPhone app has no floating window, because iOS only allows one for video. It
 | Reminders when the phone is locked or you're in another app | Yes, a soft tone and a line on the Lock Screen (Silent mode and Focus apply to them as to any app) | Yes | No | Yes, if you turn on **System notification** in Menu |
 | Keeping the screen awake | Yes (on by default during a session) | Yes | Yes, on iOS 18.4 and later | Yes |
 | Vibration | Yes, if you turn it on | Yes, if you turn it on | No | No |
-| Floating window | No | Yes | No (only in a Safari tab, experimental, can't be tapped) | Yes |
+| Floating view | Yes, the picture as a small video (can't be tapped, except to come back) | Yes | No (only in a Safari tab, experimental, can't be tapped) | Yes |
 
 **Why the web page can do less on a phone:** a phone pauses web pages as soon as they're off screen or the phone locks, so the page can't play a sound then. That's a rule of the phone that a web page can't get around, and it is why the TimeFall app exists. If you use the web page, leave it open on screen; the screen stays awake by default while a session runs. The picture and the warming light are designed to do the whole job without sound.
 

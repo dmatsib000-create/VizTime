@@ -4,12 +4,23 @@
 // tests/cues.test.js can hold Work mode to its rule: it schedules nothing but
 // "Session finished." The shells turn these into local notifications
 // (js/native.js) and cancel them whenever the app comes back to the front.
+// `phoneCarriesCues` says when the page must stay quiet because one of these
+// reminders will sound instead.
 
 import * as E from './engine.js';
 import { notification } from './words.js';
 
 // Fixed ids, so the shells cancel exactly these before scheduling again.
 export const CUE_IDS = { half: 1, warn: 2, finish: 3 };
+
+// Whether the phone's reminder, rather than the page, carries a cue's tone,
+// vibration and voice. It does in Android's floating window (a swipe that
+// closes the window ends the app before the page could schedule anything, so
+// the reminders are set while it floats), and on an iPhone whose page is kept
+// running out of sight by its floating picture, once its reminders are
+// scheduled (`armed`). With nothing scheduled the page plays the cue itself,
+// so a cue is never lost, and in front the page always plays its own.
+export const phoneCarriesCues = ({ floating = false, hidden = false, armed = false } = {}) => !!floating || (!!hidden && !!armed);
 
 // The cues still to come, each with the words it will show and whether it
 // carries a tone or a vibration. Nothing is planned for a paused or finished
