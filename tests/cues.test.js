@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as E from '../js/engine.js';
-import { plannedCues, CUE_IDS, phoneCarriesCues } from '../js/cues.js';
+import { plannedCues, reconcileCues, CUE_IDS, phoneCarriesCues } from '../js/cues.js';
 
 const { MIN } = E;
 const T0 = new Date(2026, 10, 1, 14, 0).getTime(); // 2:00 PM local
@@ -86,4 +86,70 @@ test('the page stays quiet only where a reminder will sound instead', () => {
   // In front, the page plays its own cues, scheduled reminders or not.
   assert.equal(phoneCarriesCues({ hidden: false, armed: true }), false);
   assert.equal(phoneCarriesCues(), false);
+});
+
+/* ---------- What changes on the phone (reconcileCues) ---------- */
+
+const heldFrom = plan => Object.fromEntries(plan.map(c => [c.id, c]));
+
+test('nothing held: the whole plan is scheduled, nothing cancelled', () => {
+  const s = E.createSession({ title: 'Notes', totalMs: 25 * MIN }, T0);
+  const plan = plannedCues('full', s, settings(), T0);
+  const r = reconcileCues({}, plan, T0);
+  assert.deepEqual(r.cancel, []);
+  assert.deepEqual(r.schedule, plan);
+  assert.deepEqual(r.kept, {});
+});
+
+test('the same plan again changes nothing on the phone', () => {
+  const s = E.createSession({ title: 'Notes', totalMs: 25 * MIN }, T0);
+  const plan = plannedCues('full', s, settings(), T0);
+  const r = reconcileCues(heldFrom(plan), plannedCues('full', s, settings(), T0 + MIN), T0 + MIN);
+  assert.deepEqual(r.cancel, []);
+  assert.deepEqual(r.schedule, []);
+  assert.deepEqual(Object.keys(r.kept).map(Number), plan.map(c => c.id));
+});
+
+test('a reminder whose moment has come is never taken back, even once the plan drops it', () => {
+  // The floating page reaches the finish a moment before the phone does.
+  const s = E.createSession({ title: 'Notes', totalMs: 25 * MIN }, T0);
+  const held = heldFrom(plannedCues('full', s, settings(), T0));
+  E.settle(s, s.endAt);
+  const r = reconcileCues(held, plannedCues('full', s, settings(), s.endAt), s.endAt);
+  assert.deepEqual(r.cancel, []);
+  assert.deepEqual(r.schedule, []);
+});
+
+test('stopping or pausing takes back the reminders still to come', () => {
+  const s = E.createSession({ title: 'Notes', totalMs: 25 * MIN }, T0);
+  const held = heldFrom(plannedCues('full', s, settings(), T0));
+  const stopped = reconcileCues(held, [], T0 + MIN);
+  assert.deepEqual(stopped.cancel.sort(), [CUE_IDS.warn, CUE_IDS.finish]);
+  assert.deepEqual(stopped.kept, {});
+  E.pause(s, T0 + MIN);
+  assert.deepEqual(reconcileCues(held, plannedCues('full', s, settings(), T0 + MIN), T0 + MIN).cancel.sort(), [CUE_IDS.warn, CUE_IDS.finish]);
+});
+
+test('adding time moves the reminders: the old ones are taken back and the new ones set', () => {
+  const s = E.createSession({ title: 'Notes', totalMs: 25 * MIN }, T0);
+  const held = heldFrom(plannedCues('full', s, settings(), T0));
+  E.adjust(s, 5 * MIN, T0 + MIN);
+  const plan = plannedCues('full', s, settings(), T0 + MIN);
+  const r = reconcileCues(held, plan, T0 + MIN);
+  assert.deepEqual(r.cancel.sort(), [CUE_IDS.warn, CUE_IDS.finish]);
+  assert.deepEqual(r.schedule, plan);
+  assert.equal(r.schedule.find(c => c.cue === 'finish').at, s.endAt);
+});
+
+test('a warning already sounded is not taken back when added time sets it up again', () => {
+  const s = E.createSession({ title: 'Notes', totalMs: 25 * MIN }, T0);
+  const held = heldFrom(plannedCues('full', s, settings(), T0));
+  const afterWarn = s.endAt - s.warnMs + 1000;
+  E.settle(s, afterWarn);
+  E.adjust(s, MIN, afterWarn); // the warning moves back into the future, so it is re-armed
+  const plan = plannedCues('full', s, settings(), afterWarn);
+  const r = reconcileCues(held, plan, afterWarn);
+  assert.deepEqual(r.cancel, [CUE_IDS.finish]); // the old warning has already arrived
+  assert.deepEqual(r.schedule.map(c => c.cue), ['warn', 'finish']);
+  assert.equal(r.schedule[0].at, s.endAt - s.warnMs);
 });

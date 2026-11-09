@@ -22,6 +22,25 @@ export const CUE_IDS = { half: 1, warn: 2, finish: 3 };
 // so a cue is never lost, and in front the page always plays its own.
 export const phoneCarriesCues = ({ floating = false, hidden = false, armed = false } = {}) => !!floating || (!!hidden && !!armed);
 
+// What to change on the phone while TimeFall is out of sight, given the
+// reminders it holds (`held`: cue id → the planned cue it was given) and the
+// plan for now. A reminder still wanted as it is stays untouched, so a call
+// that changes nothing costs nothing. One whose moment has come is left to
+// arrive, wanted or not: the page, still drawing in Android's floating
+// window, can reach that moment a little before the phone does, and taking
+// the reminder back then would lose it. Any other is taken back. Returns the
+// ids to cancel, the cues to schedule, and the held reminders that stay.
+export function reconcileCues(held, plan, now) {
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const cancel = [], kept = {};
+  for (const [id, was] of Object.entries(held)) {
+    const want = plan.find(c => c.id === Number(id));
+    if (want && same(want, was)) kept[id] = was;
+    else if (was.at > now) cancel.push(Number(id));
+  }
+  return { cancel, schedule: plan.filter(c => !kept[c.id]), kept };
+}
+
 // The cues still to come, each with the words it will show and whether it
 // carries a tone or a vibration. Nothing is planned for a paused or finished
 // session, for a cue already played, or for a moment already past: a cue

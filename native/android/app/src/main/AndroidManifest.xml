@@ -43,8 +43,10 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Reminders at the exact moment a cue is due, while the phone is locked. Android grants
-         USE_EXACT_ALARM at install to apps whose purpose is timing, which TimeFall's is. -->
+    <!-- Reminders at the exact moment a cue is due, while the phone is locked. Android 13 and
+         later grant USE_EXACT_ALARM at install to apps whose purpose is timing, which TimeFall's
+         is. Android 12 uses SCHEDULE_EXACT_ALARM instead, which the notifications plugin's own
+         manifest declares and which is merged into this one at build time. -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />

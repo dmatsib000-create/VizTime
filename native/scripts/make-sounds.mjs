@@ -65,3 +65,10 @@ for (const [name, phrase] of Object.entries(PHRASES)) {
   for (const dir of targets) writeFileSync(join(dir, `${name}.wav`), file);
   console.log(`${name}.wav  ${(file.length / 1024).toFixed(0)} KB, ${(file.length / 2 / RATE).toFixed(1)} s`);
 }
+
+// Android only: a tenth of a second of silence for the quiet reminder
+// channels. A channel made without a sound plays the phone's own
+// notification sound, so "quiet" has to be a sound that says nothing.
+// (iPhone reminders without a sound are already silent.)
+writeFileSync(join(targets[1], 'cue_none.wav'), wav(Buffer.alloc(Math.round(RATE / 10) * 2)));
+console.log('cue_none.wav  Android only, silent');
