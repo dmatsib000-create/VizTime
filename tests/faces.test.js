@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MIN } from '../js/engine.js';
-import { clockMarks, redrawGap, faceFor, FACES } from '../js/faces.js';
+import { clockMarks, redrawGap, faceFor, tvScale, FACES } from '../js/faces.js';
 
 const UTC = Date.UTC(2026, 10, 2, 14, 3); // 14:03 UTC
 const local = (t, tz) => ((t - tz * MIN) % (24 * 60 * MIN) + 24 * 60 * MIN) % (24 * 60 * MIN) / MIN; // minutes past local midnight
@@ -90,4 +90,11 @@ test('Full mode keeps its own choice; Simple always has the disc', () => {
   assert.equal(faceFor('full', { face: 'sun', fullFace: 'ruler' }), 'ruler');
   assert.equal(faceFor('full', {}), 'disc');
   assert.equal(faceFor('simple', { face: 'sun', fullFace: 'ruler' }), 'disc');
+});
+
+test('TV view enlarges the picture\'s lines and labels on a big screen, and leaves a phone on its side alone', () => {
+  assert.equal(tvScale(844, 390), 1);
+  assert.equal(tvScale(390, 844), 1);
+  assert.equal(tvScale(1920, 1080), 2.7);
+  assert.equal(tvScale(1080, 1920), 2.7);
 });

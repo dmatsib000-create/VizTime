@@ -45,6 +45,11 @@ export function palette(root = document.documentElement) {
   };
 }
 
+// TV view draws the picture as if on a phone-sized screen and enlarges it, so
+// its lines and labels grow with a big screen instead of staying desk-sized.
+// A phone on its side is about 400 high, where nothing changes.
+export const tvScale = (width, height) => Math.max(1, Math.min(width, height) / 400);
+
 // Reads only six-digit hex, which is how styles.css writes every colour token.
 function alpha(hex, a) {
   const n = parseInt(hex.replace('#', ''), 16);
