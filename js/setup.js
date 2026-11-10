@@ -3,7 +3,8 @@
 import * as E from './engine.js';
 import { load, save, getNote } from './store.js';
 import { mode } from './state.js';
-import { $, fmtClock, fmtShort, fmtLeft, toast } from './ui.js';
+import { $, fmtClock, fmtShort, toast } from './ui.js';
+import { exactHint, untilHint, presetName, presetLength } from './words.js';
 import { startSession } from './session.js';
 
 const { MIN, MAX_MINUTES } = E;
@@ -47,14 +48,14 @@ export function resetForm() {
 }
 
 export function renderSetup() {
-  const work = mode === 'work', by = lengthBy();
+  const by = lengthBy();
   for (const b of document.querySelectorAll('[data-by]')) b.setAttribute('aria-pressed', String(b.dataset.by === form.by));
   $('by-for').hidden = by !== 'for';
   $('by-until').hidden = by !== 'until';
   const exact = $('f-minutes').value.trim();
   // In Work mode typed minutes are confirmed as an end time, never a duration.
   const typed = parseInt(exact, 10);
-  $('f-exact-hint').textContent = work && typed >= 1 && typed <= MAX_MINUTES ? `Ends at ${fmtClock(Date.now() + typed * MIN)}.` : '';
+  $('f-exact-hint').textContent = exactHint(mode, typed, Date.now());
   for (const c of $('f-chips').children) c.setAttribute('aria-pressed', String(by === 'for' && !exact && +c.dataset.min === form.minutes));
   const typedTime = $('f-until').value;
   for (const c of $('u-chips').children) c.setAttribute('aria-pressed', String(by === 'until' && !typedTime && +c.dataset.min === form.untilMin));
@@ -96,10 +97,7 @@ function untilTotal() {
 function renderUntilHint() {
   const total = untilTotal();
   // Work mode shows only the clock time, never a duration someone could read as a countdown.
-  $('f-until-hint').textContent = total == null ? '' : total < MIN
-    ? 'That leaves no time. Choose a later time.'
-    : mode === 'work' ? `Ends at ${fmtClock(Date.now() + total)}.`
-      : `This session ends at ${fmtClock(Date.now() + total)}, ${fmtLeft(total)} from now.`;
+  $('f-until-hint').textContent = untilHint(mode, total, Date.now());
 }
 
 function readForm() {
@@ -117,15 +115,11 @@ function readForm() {
     totalMs = Math.round(totalMs / 1000) * 1000;
   }
   const w = $('f-warn').value;
-  let warnMs = w === 'auto' ? undefined : +w * MIN;
-  if (warnMs && warnMs >= totalMs) warnMs = totalMs / 2;
+  const warnMs = w === 'auto' ? undefined : +w * MIN; // E.createSession keeps it to half the session
   return {
     title: $('f-title').value, next: $('f-next').value, step: $('f-step').value, totalMs, warnMs,
   };
 }
-
-// An untitled preset is named by its length, except in Work mode, which never shows one.
-const presetName = p => p.title || (mode === 'work' ? 'Session' : `${p.minutes} minutes`);
 
 function renderPresets() {
   const list = $('preset-list');
@@ -136,37 +130,51 @@ function renderPresets() {
     start.className = 'preset-start';
     const name = document.createElement('span');
     name.className = 'preset-name';
-    name.textContent = presetName(p);
+    name.textContent = presetName(mode, p);
     if (p.next) {
       const em = document.createElement('em');
       em.textContent = `, then ${p.next}`;
       name.append(em);
     }
-    const len = document.createElement('span');
-    len.className = 'preset-len';
-    len.textContent = `${p.minutes} min`;
-    start.append(name, len);
+    start.append(name);
+    // Work mode never shows a length, so it isn't written at all.
+    const length = presetLength(mode, p);
+    if (length) {
+      const len = document.createElement('span');
+      len.className = 'preset-len';
+      len.textContent = length;
+      start.append(len);
+    }
     start.addEventListener('click', () => startSession({
       title: p.title, next: p.next, step: p.step, totalMs: p.minutes * MIN,
-      warnMs: p.warn === 'auto' ? undefined : Math.min(+p.warn * MIN, (p.minutes * MIN) / 2),
+      warnMs: p.warn === 'auto' ? undefined : +p.warn * MIN,
     }));
     const del = document.createElement('button');
     del.type = 'button';
     del.className = 'preset-del';
     del.textContent = '×';
-    del.setAttribute('aria-label', `Remove preset ${presetName(p)}`);
+    del.setAttribute('aria-label', `Remove preset ${presetName(mode, p)}`);
     del.addEventListener('click', () => {
       const removed = presets.indexOf(p);
       presets = presets.filter(x => x !== p);
       save('presets', presets);
       renderPresets();
-      toast('Preset removed', () => { presets.splice(removed, 0, p); save('presets', presets); renderPresets(); });
+      toast('Preset removed', () => { presets.splice(removed, 0, p); save('presets', presets); renderPresets(); focusPresetRemove(removed); });
+      focusPresetRemove(removed);
     });
     li.append(start, del);
     return li;
   }));
   $('presets-empty').hidden = presets.length > 0;
   list.closest('.presets').classList.toggle('has-items', presets.length > 0);
+}
+
+// The button that had focus is gone after a remove (or an undo), so focus
+// moves to the remove button now in that place, the one before it, or Undo
+// when no presets are left: keyboard and VoiceOver users keep their place.
+function focusPresetRemove(index) {
+  const dels = $('preset-list').querySelectorAll('.preset-del');
+  (dels[Math.min(index, dels.length - 1)] || $('toast-undo')).focus();
 }
 
 $('setup-form').addEventListener('submit', e => {

@@ -56,10 +56,22 @@ test('Work mode: the picture is a clock to a screen reader, until the private re
   for (const { s, now } of workCases()) assert.equal(W.faceLabel('work', s, now), 'Clock. Show time left');
 });
 
+const TIMER_WORDS = /\b(min|minutes?|hours?|timer|countdown|time's up|wrapping up|halfway)\b/i;
+
 test('Work mode: nothing it says holds a number or a timer word', () => {
   const said = [];
   for (const { s, now } of workCases()) {
     said.push(W.pageTitle('work', s, now), W.faceLabel('work', s, now));
+    // The screens' own words: the running title, the finish screen, the
+    // floating window and the floating picture's line. These show the
+    // person's own title and next entry, which may hold numbers of their own
+    // ("Room 4"), so only what the app adds around them is checked.
+    const own = text => [s.title, s.next].filter(Boolean).reduce((t, w) => t.replaceAll(w, ''), text);
+    const landing = W.landingText('work', s);
+    const float = W.floatText('work', s, now);
+    said.push(...[W.sessionTitle('work', s), W.videoLine('work', s), landing.label, landing.title, float.next, float.fig].map(own));
+    if (s.title || s.finishedAt) said.push(own(float.title));
+    else assert.equal(float.title, W.fmtClock(now), 'an untitled session floats under the clock');
     for (const cue of CUES) {
       said.push(W.cueWords('work', cue, s, now));
       const n = W.notification('work', cue, s, now);
@@ -68,8 +80,55 @@ test('Work mode: nothing it says holds a number or a timer word', () => {
   }
   for (const text of said) {
     assert.doesNotMatch(text, /\d/, `"${text}" holds a number`);
-    assert.doesNotMatch(text, /\b(min|minutes?|hours?|timer|countdown|time's up|wrapping up|halfway)\b/i, `"${text}" sounds like a timer`);
+    assert.doesNotMatch(text, TIMER_WORDS, `"${text}" sounds like a timer`);
   }
+});
+
+test('Work mode: the running screen writes no figures at all', () => {
+  for (const { s, now } of workCases()) assert.equal(W.runFigures('work', s, now), null);
+});
+
+test('Work mode: presets show no length, and an untitled one is just "Session"', () => {
+  assert.equal(W.presetName('work', { title: '', minutes: 25 }), 'Session');
+  assert.equal(W.presetName('work', { title: 'Notes', minutes: 25 }), 'Notes');
+  assert.equal(W.presetLength('work', { title: 'Notes', minutes: 25 }), null);
+});
+
+test('Work mode: lengths are shown only as clock times, never as durations', () => {
+  const now = T0;
+  const s = E.createSession({ title: 'Notes', next: 'Lunch', totalMs: 25 * MIN }, now);
+  const expected = [
+    [W.startLabel('work', 'Lunch', 25, now), `Start Lunch · until ${W.fmtShort(now + 25 * MIN)}`],
+    [W.exactHint('work', 40, now), `Ends at ${W.fmtClock(now + 40 * MIN)}.`],
+    [W.untilHint('work', 40 * MIN, now), `Ends at ${W.fmtClock(now + 40 * MIN)}.`],
+    [W.scheduleTimes(s, now).current, `${W.fmtShort(now)}–${W.fmtShort(now + 25 * MIN)}`],
+  ];
+  for (const [said, want] of expected) {
+    assert.equal(said, want);
+    assert.doesNotMatch(said, TIMER_WORDS, `"${said}" sounds like a timer`);
+  }
+  assert.equal(W.exactHint('work', 0, now), '');
+  assert.equal(W.untilHint('work', 30_000, now), 'That leaves no time. Choose a later time.');
+});
+
+test('Work mode: the floating window shows the time left only during the private reveal', () => {
+  const s = E.createSession({ title: 'Notes', totalMs: 25 * MIN }, T0);
+  assert.equal(W.floatText('work', s, T0 + 5 * MIN).fig, '');
+  assert.equal(W.floatText('work', s, T0 + 5 * MIN, true).fig, '20 min');
+});
+
+test('Full mode: the screens name the time left and the end, which moves on while paused', () => {
+  const s = E.createSession({ title: 'Notes', next: 'Lunch', totalMs: 25 * MIN }, T0);
+  assert.deepEqual(W.runFigures('full', s, T0 + 5 * MIN), { paused: false, left: '20 min', ends: W.fmtClock(T0 + 25 * MIN) });
+  E.pause(s, T0 + 5 * MIN);
+  const paused = W.runFigures('full', s, T0 + 15 * MIN);
+  assert.equal(paused.paused, true);
+  assert.equal(paused.ends, W.fmtClock(T0 + 35 * MIN));
+  assert.equal(W.floatText('full', s, T0 + 15 * MIN).fig, `20 min · ends ${W.fmtClock(T0 + 35 * MIN)}`);
+  assert.equal(W.scheduleTimes(s, T0 + 15 * MIN).next, W.fmtShort(T0 + 35 * MIN));
+  assert.equal(W.sessionTitle('full', { title: '', totalMs: 25 * MIN }), '25 minutes');
+  assert.equal(W.startLabel('full', 'Lunch', 25, T0), 'Start Lunch · 25 min');
+  assert.equal(W.presetLength('full', { minutes: 25 }), '25 min');
 });
 
 test('Full mode: the tab shows the time left and the title', () => {
@@ -113,6 +172,10 @@ test('time left is worded in plain minutes and hours', () => {
   assert.equal(W.fmtLeft(61_000), '2 min');
   assert.equal(W.fmtLeft(60 * MIN), '1 h');
   assert.equal(W.fmtLeft(90 * MIN), '1 h 30 min');
+});
+
+test('Work mode: the private reveal lasts four seconds', () => {
+  assert.equal(W.REVEAL_MS, 4000);
 });
 
 test('TV view: the private tap never shows the time left on a mirrored screen', () => {

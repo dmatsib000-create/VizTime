@@ -23,7 +23,7 @@ export const BUNDLES = {
 
 export const clone = o => JSON.parse(JSON.stringify(o));
 const DEFAULTS = {
-  defaultMode: 'full', face: 'planner', fullFace: 'disc', bundle: 'balanced', ...clone(BUNDLES.balanced),
+  defaultMode: 'full', face: 'planner', fullFace: 'disc', ...clone(BUNDLES.balanced),
   volume: 0.6, flash: false, wake: true, notify: isNative, rememberLengths: false, silentTones: false,
   // The phone shells: vibration with the cues, and Android's floating window opening on its own.
   vibrate: false, autoFloat: false,

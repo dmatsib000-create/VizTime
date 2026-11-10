@@ -11,6 +11,8 @@
   src: url(fonts/plex-mono-500.woff2) format('woff2'); }
 
 :root {
+  /* Colours stay six-digit hex: the canvas reads them (palette() and alpha()
+     in js/faces.js) and understands no other form. */
   --paper: #EFEAE0;
   --paper-raised: #F6F2EA;
   --rule: #D6CFC1;
@@ -358,8 +360,6 @@ body[data-mode="work"] .figures,
 body[data-mode="work"] .next-card { display: none !important; }
 body[data-mode="work"] .work-head { display: block; }
 body[data-mode="work"] .faces-switch, body[data-mode="full"] .faces-switch { display: flex; }
-/* A shrinking disc or a ruled bar reads as a timer, so Work mode offers neither. */
-body[data-mode="work"] .dot[data-face="disc"], body[data-mode="work"] .dot[data-face="ruler"] { display: none; }
 body[data-mode="work"] .work-tools { display: flex; }
 body[data-mode="work"]:not(.is-edit-open) .controls { display: none; }
 body[data-mode="work"]:not(.is-note-open) #leave-note { display: none !important; }

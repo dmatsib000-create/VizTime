@@ -1,10 +1,11 @@
 // The floating views' content: the always-on-top window's page and controls,
 // and the picture-in-picture video. float.js opens and closes them.
 
-import * as E from './engine.js';
 import { mode, session } from './state.js';
-import { $, fmtClock, fmtLeft, toast } from './ui.js';
-import { faceLabel } from './screens.js';
+import { $, toast, onActivate } from './ui.js';
+import { floatText, REVEAL_MS } from './words.js';
+import { faceLabel, mainLabel, startMain, extend } from './screens.js';
+import { togglePause, adjustBy, endSession } from './session.js';
 import { tick, lastTick, step, paint, paintVideo, faceModel, faceName, frameGap, paintRequests } from './draw.js';
 import { canFloatWindow, canFloatVideo, openFloatWindow, openFloatVideo } from './float.js';
 import { canFloatNative, floatNative } from './native.js';
@@ -76,7 +77,7 @@ export function buildFloat(doc) {
     <p class="pip-title" id="pip-title"></p>
     <p class="pip-next" id="pip-next"></p>
     <div class="pip-face-wrap" id="pip-face-wrap"><canvas class="pip-face" id="pip-face" role="img"></canvas></div>
-    <p class="pip-fig mono" id="pip-fig" aria-live="polite"></p>
+    <p class="pip-fig mono" id="pip-fig"></p>
     <div class="pip-row pip-controls" id="pip-row">
       <button type="button" class="ctl mono" data-padj="-5" aria-label="Take 5 minutes off">−5</button>
       <button type="button" class="ctl mono" id="pip-pause">Pause</button>
@@ -89,26 +90,17 @@ export function buildFloat(doc) {
         <button type="button" class="ctl mono" id="pip-done">Done</button>
       </div>
     </div>`;
-  // The handoff buttons do exactly what the main finish screen's buttons do.
-  doc.getElementById('pip-main').addEventListener('click', () => $('l-main').click());
-  doc.getElementById('pip-more').addEventListener('click', () => document.querySelector('[data-extend="5"]').click());
-  doc.getElementById('pip-done').addEventListener('click', () => $('l-done').click());
-  doc.getElementById('pip-pause').addEventListener('click', () => $('pause-btn').click());
-  for (const b of doc.querySelectorAll('[data-padj]')) {
-    b.addEventListener('click', () => document.querySelector(`[data-adj="${b.dataset.padj}"]`).click());
-  }
+  // The buttons call the same actions as the main screen's (session.js, screens.js).
+  doc.getElementById('pip-main').addEventListener('click', startMain);
+  doc.getElementById('pip-more').addEventListener('click', () => extend(5));
+  doc.getElementById('pip-done').addEventListener('click', endSession);
+  doc.getElementById('pip-pause').addEventListener('click', togglePause);
+  for (const b of doc.querySelectorAll('[data-padj]')) b.addEventListener('click', () => adjustBy(+b.dataset.padj));
   // In Work mode the clock can be tapped there too, or reached with the keyboard.
-  const revealFloat = () => {
+  onActivate(doc.getElementById('pip-face'), () => {
     if (mode !== 'work' || !session) return;
-    floatRevealUntil = Date.now() + 4000;
+    floatRevealUntil = Date.now() + REVEAL_MS;
     renderFloatText(Date.now());
-  };
-  const face = doc.getElementById('pip-face');
-  face.addEventListener('click', revealFloat);
-  face.addEventListener('keydown', e => {
-    if (e.key !== 'Enter' && e.key !== ' ') return;
-    e.preventDefault();
-    revealFloat();
   });
 }
 
@@ -126,20 +118,21 @@ export function renderFloatText(now) {
   floatDoc.body.classList.toggle('is-finished', finished);
   floatDoc.body.dataset.picture = faceName();
   g('pip-face-wrap').hidden = finished;
-  g('pip-title').textContent = finished
-    ? (work ? 'Session finished.' : 'Finished') : (session.title || (work ? fmtClock(now) : ''));
-  g('pip-next').textContent = session.next ? `${work || finished ? 'Next:' : 'then'} ${session.next}` : '';
+  const text = floatText(mode, session, now, now < floatRevealUntil);
+  g('pip-title').textContent = text.title;
+  g('pip-next').textContent = text.next;
   g('pip-row').hidden = work || finished;
   // At the finish the window offers the same handoff as the main screen.
   g('pip-end').hidden = !finished;
   const canStart = !!(finished && session.next && mode !== 'simple');
   g('pip-main').hidden = !canStart;
-  if (canStart) g('pip-main').textContent = $('l-main').textContent;
+  if (canStart) g('pip-main').textContent = mainLabel(now);
   floatDoc.getElementById('pip-pause').textContent = session.pausedAt ? 'Resume' : 'Pause';
+  // Only Work mode's private reveal is announced; Full mode's figures change
+  // every minute and would interrupt a screen reader each time.
   const fig = floatDoc.getElementById('pip-fig');
-  if (finished) fig.textContent = '';
-  else if (work) fig.textContent = now < floatRevealUntil ? fmtLeft(E.remaining(session, now)) : '';
-  else fig.textContent = `${fmtLeft(E.remaining(session, now))} · ends ${fmtClock(session.endAt)}`;
+  fig.setAttribute('aria-live', work ? 'polite' : 'off');
+  fig.textContent = text.fig;
 }
 
 $('float-btn').addEventListener('click', openFloat);

@@ -40,9 +40,9 @@ Sessions are stored as timestamps, so a running session survives closing and reo
 
 ## Floating view
 
-- **Chrome, Edge or Vivaldi on a computer:** **Float** opens a small always-on-top window with the picture and −5, Pause, +5. Its layout follows the window's shape: side by side when wide, picture-first when small. At the finish it offers the same handoff as the main screen (Start the next activity, +5 min, Done). In Work mode it shows only the picture and the next entry, and the picture reveals the time left on a tap or Enter.
-- **Android app:** **Float** shrinks the whole app into a small window that stays over other apps, with the picture and what comes next; Menu → Floating view can make it float on its own whenever you leave the app during a session.
-- **iPhone app:** **Float** shows the picture as a picture-in-picture video that stays over other apps and the Home Screen. It can't pause or adjust the session; tapping it offers the button back to TimeFall. iOS only floats video, and only for a full app with the "Audio, AirPlay and Picture in Picture" background mode, which the shell declares; that is the permit the home-screen web app lacks (WebKit bug 303885). While the picture floats out of sight, the page plays no tone of its own: the Lock Screen reminders carry the cues, so nothing sounds twice. Not yet tried on a real iPhone; whether the picture keeps moving there is the owner's test in [docs/timefall-progress.md](docs/timefall-progress.md).
+- **Chrome, Edge or Vivaldi on a computer:** **Float** opens a small always-on-top window with the picture and −5, Pause, +5. Its layout follows the window's shape: side by side when wide, picture-first when small. At the finish it offers the same handoff as the main screen (Start the next activity, +5 min, Done). In Work mode it shows only the picture, the session's name (or the clock when it has none) and the next entry, and the picture reveals the time left on a tap or Enter.
+- **Android app:** **Float** shrinks the whole app into a small window that stays over other apps, with the picture and what comes next; Menu → Floating view can make it float on its own whenever you leave the app during a session. While it floats, each cue the phone has a reminder for is left to that reminder (closing the window ends the app before it could schedule one); any other cue, such as Work mode's warning tone, is played by the window itself.
+- **iPhone app:** **Float** shows the picture as a picture-in-picture video that stays over other apps and the Home Screen. It can't pause or adjust the session; tapping it offers the button back to TimeFall. iOS only floats video, and only for a full app with the "Audio, AirPlay and Picture in Picture" background mode, which the shell declares; that is the permit the home-screen web app lacks (WebKit bug 303885). While the picture floats out of sight, a cue that has a Lock Screen reminder is left to the reminder, so nothing sounds twice; a cue without one (Work mode's warning, or every cue with reminders off) is still played by the page. Not yet tried on a real iPhone; whether the picture keeps moving there is the owner's test in [docs/timefall-progress.md](docs/timefall-progress.md).
 - **iPhone web page, in Safari:** in a Safari tab, **Float** shows the same floating video. iOS may freeze it while TimeFall is in the background. This is experimental. Apple doesn't support picture-in-picture in home-screen apps yet, so **Float** isn't shown when TimeFall is opened from the Home Screen.
 
 ## TV view
@@ -73,20 +73,26 @@ The apps: [install/](install/index.html). The web version is static files at the
 ## Local preview
 
 ```bash
-python -m http.server 8000
+python -m http.server 8765
 ```
 
-Then open http://localhost:8000.
+Then open http://localhost:8765.
 
 ## Tests
 
-The timer model, what the app says about time (including that Work mode only ever says "Session finished." and its tab is always "Day"), the reminders a phone schedules (including that Work mode schedules only "Session finished."), the faces' clock marks and how often they are drawn, saved data and the codes that carry it, and the offline file list have tests that use Node's built-in runner, so there is nothing to install. With Node 20 or later:
+The timer model, what the app says about time on every screen (including that Work mode only ever says "Session finished.", its tab is always "Day", and it shows lengths only as clock times), the reminders a phone schedules (including that Work mode schedules only "Session finished.") and which cues the page leaves to them, the faces' clock marks, how often they are drawn and that Work mode never offers the disc or the ruler, saved data and the codes that carry it, the offline file list and how the offline worker answers (a slow network, a server error, a Wi-Fi sign-in page, no network), the iPhone hand-off to TestFlight (against a stand-in App Store Connect), and the names the page and the phone shells must agree on have tests that use Node's built-in runner, so there is nothing to install. With Node 20 or later:
 
 ```bash
 node --test
 ```
 
-They also run on every pull request, after a check that every script parses; the two app workflows build the shells on pull requests too. When adding a file the app needs offline, list it in `SHELL` in `sw.js` and bump `CACHE`; the tests fail if a script or font is missing from the list.
+A second check loads the real page in headless Chrome, in each mode, and fails on any script error. It needs Node 22 and Chrome, and no packages:
+
+```bash
+node tests/browser-smoke.mjs
+```
+
+Both run on every pull request, after a check that every script parses; the two app workflows build the shells on pull requests too. When adding a file the app needs offline, list it in `SHELL` in `sw.js` and bump `CACHE`; the tests fail if a script or font is missing from the list.
 
 What the platforms allow (floating windows, sound after locking, keeping the screen awake) can only be checked on the devices themselves. [docs/device-tests.md](docs/device-tests.md) lists those tests; they use `check/`, a page that isn't part of the app.
 

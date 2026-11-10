@@ -18,3 +18,7 @@ jobs:
       - name: Check every script parses
         run: for f in js/*.js sw.js; do node --check "$f" || exit 1; done
       - run: node --test
+      # The real page in headless Chrome (already on GitHub's runner), in each
+      # mode, failing on any script error. No npm packages: see the file.
+      - name: Load the page in each mode
+        run: node tests/browser-smoke.mjs

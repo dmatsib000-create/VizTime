@@ -1,14 +1,20 @@
 // TimeFall: loads every part of the page, then shows the first screen.
 //
 // platform.js where this runs: the web page, or the iPhone or Android shell
+// engine.js   the timer model: sessions as timestamps, stages, cues (pure, tested)
+// store.js    saved data under the viztime2: prefix, and the codes that carry it (tested)
 // state.js    settings, the mode and the session, shared by all of these
 // ui.js       element lookup, the toast, the live region
 // words.js    what the app says about time: formats, tab title, cues,
-//             notifications, the picture's label (pure, and tested)
+//             notifications, the picture's label, and every screen's and
+//             floating view's words about time (pure, and tested)
 // setup.js    the setup form, presets and the simple chips
 // session.js  starting, running controls, finishing, stopping, cues, wake lock
 // screens.js  which screen shows, and the running and finish screens
 // draw.js     the clock tick and the frame loop: picture, warm light, zoom
+// faces.js    the pictures drawn on canvas, and which each mode offers (tested)
+// sound.js    the tones and the spoken cues
+// float.js    opening the floating window and the floating video
 // pip.js      the floating window's content and the picture-in-picture video
 // menu.js     the menu sheet and the mode switch
 // cues.js     the reminders a phone schedules for the background (pure, tested)

@@ -29,7 +29,7 @@ There are two ways to have TimeFall on a phone, and neither needs an account.
 2. Tap the **Share** button (the square with an arrow pointing up).
 3. Tap **Add to Home Screen**, then **Add**.
 
-It now has its own icon, opens full screen, and works without an internet connection once it has been opened once.
+It now has its own icon, opens full screen, and works without an internet connection once it has been opened once. On slow Wi-Fi it opens from the copy saved on your phone after about three seconds, and a Wi-Fi sign-in page (in a clinic, hotel or café) can't replace that copy.
 
 **Computer:** open the address in Chrome, Edge or Vivaldi. You can bookmark it, or use the browser's "Install" option if it offers one.
 
@@ -85,7 +85,7 @@ A few minutes before the end (about 15% of the session, between 2 and 10 minutes
 - You're offered a box for a quick note about where you're leaving off, while you still remember.
 - If you've turned on a sound, a soft bell plays.
 
-You can choose how long this stage lasts with **Warning before the end** when setting up.
+You can choose how long this stage lasts with **Warning before the end** when setting up. It is kept to half the session at most, so it never comes before halfway: a 5-minute warning on a 6-minute session starts at 3 minutes.
 
 <br clear="right">
 

@@ -4,11 +4,12 @@ import * as E from './engine.js';
 import { getNote, setNote } from './store.js';
 import { mode, session, settings, saveSettings } from './state.js';
 import { isNative } from './platform.js';
-import { $, body, fmtClock, fmtShort, fmtLeft, toast } from './ui.js';
-import { faceLabel as pictureLabel, revealAllowed, TV_ENTERED } from './words.js';
+import { $, body, fmtLeft, setLive, onActivate, toast } from './ui.js';
+import { REVEAL_MS, faceLabel as pictureLabel, sessionTitle, runFigures, scheduleTimes, landingText, startLabel, revealAllowed, TV_ENTERED } from './words.js';
 import { renderSetup, labelChips, showRibbon, showError } from './setup.js';
 import { startSession, endSession, suggestedMinutes, syncWake } from './session.js';
 import { tick, faceName, faceSetting, requestPaint } from './draw.js';
+import { FACES } from './faces.js';
 import { canFloatWindow, canFloatVideo } from './float.js';
 import { renderFloatText, closeFloat } from './pip.js';
 import { canFloatNative, syncBackgroundCues, setAutoFloat } from './native.js';
@@ -58,11 +59,15 @@ function focusScreen(screen) {
 
 /* ---------- Running screen ---------- */
 
-const leftFigures = (s, now) => {
-  const left = E.remaining(s, now);
-  if (s.pausedAt) return `Paused · <strong>${fmtLeft(left)}</strong> left`;
-  return `<strong>${fmtLeft(left)}</strong> left · ends ${fmtClock(s.endAt)}`;
-};
+// The figures under the picture. Work mode writes none at all, rather than
+// writing them and leaving the stylesheet to hide them.
+function showFigures(s, now) {
+  const f = runFigures(mode, s, now);
+  if (!f) { $('r-figures').replaceChildren(); return; }
+  const left = document.createElement('strong');
+  left.textContent = f.left;
+  $('r-figures').replaceChildren(...(f.paused ? ['Paused · ', left, ' left'] : [left, ` left · ends ${f.ends}`]));
+}
 
 export function renderRun(now = Date.now()) {
   const s = session;
@@ -71,11 +76,11 @@ export function renderRun(now = Date.now()) {
 
   // Work mode hides this text but screen readers still read it, so it names no length.
   $('r-kind').textContent = s.kind === 'extension' && mode !== 'work' ? 'Extra time' : '';
-  $('r-title').textContent = s.title || (mode === 'work' ? 'Current' : `${Math.round(s.totalMs / MIN)} minutes`);
+  $('r-title').textContent = sessionTitle(mode, s);
   $('r-next-line').hidden = !s.next;
   $('r-next').textContent = s.next;
   showRibbon('r-ribbon', 'r-ribbon-text', s.title);
-  $('r-figures').innerHTML = leftFigures(s, now);
+  showFigures(s, now);
   $('pause-btn').textContent = s.pausedAt ? 'Resume' : 'Pause';
 
   // The next activity takes the stage for the last stretch.
@@ -96,12 +101,17 @@ export function renderRun(now = Date.now()) {
   $('w-note-btn').hidden = !s.title;
 
   // Work mode: desk clock and schedule.
-  $('w-now-when').textContent = `${fmtShort(s.endAt - s.totalMs)}–${fmtShort(s.endAt)}`;
-  $('w-now-what').textContent = s.title || 'Current';
+  const times = scheduleTimes(s, now);
+  $('w-now-when').textContent = times.current;
+  $('w-now-what').textContent = sessionTitle('work', s);
   $('w-next-row').hidden = !s.next;
-  $('w-next-when').textContent = fmtShort(s.endAt);
+  $('w-next-when').textContent = times.next;
   $('w-next-what').textContent = s.next;
-  for (const d of document.querySelectorAll('[data-face]')) d.setAttribute('aria-pressed', String(d.dataset.face === faceName()));
+  // Only the pictures this mode offers have a dot (faces.js): Work mode has no disc or ruler.
+  for (const d of document.querySelectorAll('[data-face]')) {
+    d.hidden = !(FACES[mode] || []).includes(d.dataset.face);
+    d.setAttribute('aria-pressed', String(d.dataset.face === faceName()));
+  }
   $('faces-switch').setAttribute('aria-label', mode === 'work' ? 'Clock style' : 'Picture');
 
   const face = $('face');
@@ -116,12 +126,12 @@ export function renderRun(now = Date.now()) {
 /* ---------- Finish screen ---------- */
 
 // The main start button; in Work mode it names an end time, which moves with the clock.
+// The floating window offers the same button, with the same label (pip.js).
+let nextMinutes = 25;
+export const mainLabel = now => startLabel(mode, session.next, nextMinutes, now);
 export function labelMain(now) {
   if (!session || !session.next) return;
-  const m = +$('l-main').dataset.min || 25;
-  $('l-main').textContent = mode === 'work'
-    ? `Start ${session.next} · until ${fmtShort(now + m * MIN)}`
-    : `Start ${session.next} · ${m} min`;
+  $('l-main').textContent = mainLabel(now);
 }
 
 function renderLanding() {
@@ -129,17 +139,14 @@ function renderLanding() {
   const work = mode === 'work', simple = mode === 'simple';
   const hasNext = !!s.next && !simple;
 
-  let label = '', title = 'Finished';
-  if (work) { label = hasNext ? 'Session finished.' : ''; title = hasNext ? s.next : 'Session finished.'; }
-  else if (!simple && hasNext) { label = `${s.title || 'This session'} is finished. Next:`; title = s.next; }
-  else if (!simple) label = s.title;
+  const { label, title } = landingText(mode, s);
   $('l-label').textContent = label;
   $('l-title').textContent = title;
   $('l-step').textContent = hasNext && s.step ? `First: ${s.step}` : '';
   showRibbon('l-ribbon', 'l-ribbon-text', hasNext ? s.next : '');
 
   $('l-start').hidden = !hasNext;
-  if (hasNext) $('l-main').dataset.min = suggestedMinutes(s.next);
+  if (hasNext) nextMinutes = suggestedMinutes(s.next);
   labelMain(Date.now());
   $('l-start-label').textContent = work ? 'Or until' : 'Or another length';
   labelChips(Date.now());
@@ -158,7 +165,9 @@ function renderLanding() {
 for (const c of $('l-chips').children) {
   c.addEventListener('click', () => startNext(+c.dataset.min));
 }
-$('l-main').addEventListener('click', () => startNext(+$('l-main').dataset.min));
+// What the finish screen's buttons do, shared with the floating window's (pip.js).
+export const startMain = () => startNext(nextMinutes);
+$('l-main').addEventListener('click', startMain);
 $('l-form').addEventListener('submit', e => {
   e.preventDefault();
   const m = parseInt($('l-minutes').value, 10);
@@ -171,12 +180,11 @@ $('l-minutes').addEventListener('input', () => showError('l-error'));
 function startNext(minutes) {
   startSession({ title: session.next, totalMs: minutes * MIN });
 }
-for (const b of document.querySelectorAll('[data-extend]')) {
-  b.addEventListener('click', () => {
-    const s = session;
-    startSession({ title: s.title, next: s.next, step: s.step, totalMs: +b.dataset.extend * MIN, kind: 'extension' });
-  });
+export function extend(minutes) {
+  const s = session;
+  startSession({ title: s.title, next: s.next, step: s.step, totalMs: minutes * MIN, kind: 'extension' });
 }
+for (const b of document.querySelectorAll('[data-extend]')) b.addEventListener('click', () => extend(+b.dataset.extend));
 $('l-done').addEventListener('click', endSession);
 
 // Notes save as you type; they are shown the next time that activity starts.
@@ -216,18 +224,12 @@ export const faceLabel = now => pictureLabel(mode, session, now, inTv());
 let revealTimer;
 function reveal() {
   if (!revealAllowed(mode, session, inTv())) return;
-  $('reveal').textContent = '';
-  setTimeout(() => { $('reveal').textContent = fmtLeft(E.remaining(session)); }, 50);
+  setLive($('reveal'), fmtLeft(E.remaining(session)));
   $('reveal').classList.add('is-on');
   clearTimeout(revealTimer);
-  revealTimer = setTimeout(() => $('reveal').classList.remove('is-on'), 4000);
+  revealTimer = setTimeout(() => $('reveal').classList.remove('is-on'), REVEAL_MS);
 }
-$('face').addEventListener('click', reveal);
-$('face').addEventListener('keydown', e => {
-  if (e.key !== 'Enter' && e.key !== ' ') return;
-  e.preventDefault();
-  reveal();
-});
+onActivate($('face'), reveal);
 
 /* ---------- TV view ---------- */
 

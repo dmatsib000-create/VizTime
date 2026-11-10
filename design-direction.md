@@ -41,8 +41,9 @@ Light (the signature) is a full-page overlay whose color is computed, not tokeni
 
 | Token | Value | Use |
 |---|---|---|
-| `--light-warmth` | 0 to 1 | Set by script from the session stage |
-| Overlay | `--ochre` at `warmth × 12%` (light), `× 10%` (dark), `mix-blend-mode: multiply` (light) / `soft-light` (dark) | The low-sun warming |
+| `--warmth` | 0 to 1 | Set by script from the session stage |
+| `--light-gain` | 0.6, 1 or 1.6 | Set by script from the Warm light setting |
+| Overlay | `--ochre` at `warmth × 12%` (light), `× 10%` (dark), times `--light-gain`, `mix-blend-mode: multiply` (light) / `soft-light` (dark) | The low-sun warming |
 
 Warmth is 0 for the body of the session, rises along an ease-in curve across the warning stage to about 0.7, and settles at 1 on the finish. It never animates faster than the clock.
 
@@ -60,7 +61,7 @@ Warmth is 0 for the body of the session, rises along an ease-in curve across the
 | `--type-next` | Newsreader 400, italic | `clamp(20px, 2vw + 12px, 26px)` | 1.25 | What comes next |
 | `--type-body` | Newsreader 400 | 17 px | 1.5 | Notes, the finish screen |
 | `--type-label` | IBM Plex Mono 400 | 12 px, `letter-spacing: 0.02em` | 1.4 | Labels, clock times, minutes |
-| `--type-figure` | IBM Plex Mono 400, `font-variant-numeric: tabular-nums` | 15 to 40 px by context | 1 | Supporting time numbers in full mode |
+| `--type-figure` | IBM Plex Mono 400, `font-variant-numeric: tabular-nums` | 15 px (17 px in Simple mode) | 1.5 | Supporting time numbers in full mode |
 
 Sentence case everywhere. Inputs use 17 px or larger so iOS never zooms on focus. Self-host the fonts (WOFF2, subset to Latin) and cache them in the service worker so the app is fully offline; fall back to `Georgia` and `ui-monospace`.
 

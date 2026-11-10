@@ -46,9 +46,11 @@ const mirrorKind = () => platform === 'ios' || isIphoneWeb ? 'iphone'
 
 function renderMenu() {
   $('m-default').value = settings.defaultMode;
-  settings.bundle = matchBundle();
-  for (const b of document.querySelectorAll('[data-bundle]')) b.setAttribute('aria-pressed', String(b.dataset.bundle === settings.bundle));
-  $('m-bundle-hint').textContent = BUNDLE_HINTS[settings.bundle];
+  // Which of Quiet, Balanced and Noticeable the cue settings match (none once
+  // adjusted by hand), worked out from them rather than saved alongside.
+  const bundle = matchBundle();
+  for (const b of document.querySelectorAll('[data-bundle]')) b.setAttribute('aria-pressed', String(b.dataset.bundle === bundle));
+  $('m-bundle-hint').textContent = BUNDLE_HINTS[bundle];
   for (const c of document.querySelectorAll('[data-cue]')) {
     const [cue, kind] = c.dataset.cue.split('.');
     c.checked = !!settings.cues[cue][kind];
