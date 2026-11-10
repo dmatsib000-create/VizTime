@@ -5,6 +5,7 @@ import { chime, unlockAudio, canPlayThroughSilent } from './sound.js';
 import { save, packCode, unpackCode, importData } from './store.js';
 import { BUNDLES, clone, settings, saveSettings, mode, session, setMode } from './state.js';
 import { $, toast, announce } from './ui.js';
+import { tvHint } from './words.js';
 import { form, defaultBy } from './setup.js';
 import { syncWake } from './session.js';
 import { render } from './screens.js';
@@ -38,6 +39,10 @@ function floatHint() {
   if (inIosHomeScreenApp()) return 'The floating view works when TimeFall is open in Safari, not from the Home Screen. Apple doesn’t support it in home-screen apps yet.';
   return 'This browser has no floating view. Chrome or Edge on a computer can keep the session in a small window on top of other apps.';
 }
+
+// Which mirroring steps fit this device (words.js has the wording).
+const mirrorKind = () => platform === 'ios' || isIphoneWeb ? 'iphone'
+  : platform === 'android' || /Android/.test(navigator.userAgent) ? 'android' : 'computer';
 
 function renderMenu() {
   $('m-default').value = settings.defaultMode;
@@ -78,6 +83,8 @@ function renderMenu() {
   $('m-float-hint').textContent = floatHint();
   $('m-autofloat-wrap').hidden = !canFloatNative();
   $('m-autofloat').checked = settings.autoFloat;
+
+  $('m-tv-hint').textContent = tvHint(mirrorKind());
 
   $('m-open-app').hidden = true; // offered once a code is made, on a phone's browser
   $('m-data-hint').textContent = isNative

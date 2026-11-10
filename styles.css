@@ -565,3 +565,40 @@ body.is-floating .sched-row { padding: var(--s1) 0; grid-template-columns: 4.5em
 body.is-floating .sched-what { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 body.is-floating .landing { padding-top: var(--s2); }
 body.is-floating .landing-title { font-size: 24px; }
+
+/* ---------- TV view ---------- */
+/* The same page, made for a screen across the room: the person mirrors this
+   device to a TV, and TV view leaves only the picture and what is happening.
+   Nothing here counts down in numbers, and Work mode's private reveal is gone
+   (words.js also refuses it). Any tap leaves. */
+body.is-tv { padding: var(--s5) var(--s6); min-height: 100dvh; overflow: hidden; }
+body.is-tv .bar, body.is-tv .controls, body.is-tv .figures, body.is-tv .reveal,
+body.is-tv .faces-switch, body.is-tv .next-card, body.is-tv .work-tools, body.is-tv #leave-note,
+body.is-tv .ribbon, body.is-tv .run-kind, body.is-tv .update-note,
+body.is-tv .landing-start, body.is-tv #l-note, body.is-tv .landing-more, body.is-tv .landing-step,
+body.is-tv .done-btn { display: none !important; }
+body.is-tv[data-mode] main { max-width: none; }
+body.is-tv[data-screen="run"] #run, body.is-tv[data-screen="landing"] #landing {
+  display: grid; grid-template: "text" auto "face" auto / minmax(0, 1fr);
+  gap: var(--s5) var(--s7); align-content: center; align-items: center;
+  min-height: calc(100dvh - 2 * var(--s5)); padding: 0;
+}
+body.is-tv #run .face-wrap { grid-area: face; margin: 0; }
+body.is-tv #run .run-text, body.is-tv #run .work-head { grid-area: text; margin: 0; }
+body.is-tv #run .face { width: min(100%, 56dvh); }
+body.is-tv #run .face[data-picture="ruler"] { width: 100%; height: min(34dvh, 320px); aspect-ratio: auto; }
+@media (orientation: landscape) {
+  body.is-tv[data-screen="run"] #run { grid-template: "face text" auto / minmax(0, 1.2fr) minmax(0, 1fr); }
+  body.is-tv #run .face { width: min(100%, 82dvh); }
+  /* Simple mode has no words to show: the picture alone, in the middle. */
+  body.is-tv[data-screen="run"][data-mode="simple"] #run { grid-template: "face" auto / minmax(0, 1fr); }
+}
+body.is-tv .run-title { font-size: clamp(30px, 5vw, 76px); line-height: 1.1; -webkit-line-clamp: 3; }
+body.is-tv .run-next { margin-top: var(--s4); font-size: clamp(20px, 3vw, 44px); }
+body.is-tv .run-next .label { font-size: clamp(11px, 1.3vw, 20px); }
+body.is-tv #run .work-time { font-size: clamp(44px, 7vw, 120px); }
+body.is-tv .sched-row { grid-template-columns: clamp(7.5em, 14vw, 13em) minmax(0, 1fr); }
+body.is-tv .sched-when { font-size: clamp(12px, 1.3vw, 20px); }
+body.is-tv .sched-what { font-size: clamp(19px, 2.6vw, 40px); }
+body.is-tv #landing .label { font-size: clamp(12px, 1.6vw, 24px); }
+body.is-tv .landing-title { font-size: clamp(36px, 7vw, 110px); }

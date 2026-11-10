@@ -60,10 +60,11 @@ export function notification(mode, cue, s, now) {
 export const REVEAL_MS = 4000;
 
 // The picture's label for screen readers. Work mode stays discreet: it is a
-// clock until asked, then the private reveal speaks the time left.
-export function faceLabel(mode, s, now) {
+// clock until asked, then the private reveal speaks the time left. In TV view
+// there is no reveal to offer, so it is only a clock.
+export function faceLabel(mode, s, now, onTv = false) {
   if (!s) return '';
-  if (mode === 'work') return 'Clock. Show time left';
+  if (mode === 'work') return onTv ? 'Clock' : 'Clock. Show time left';
   return `${s.pausedAt ? 'Paused, ' : ''}${fmtLeft(E.remaining(s, now))} left, ends ${fmtClock(E.endsAt(s, now))}`;
 }
 
@@ -134,4 +135,26 @@ export function floatText(mode, s, now, revealed = false) {
 export function videoLine(mode, s) {
   if (!s || s.finishedAt) return mode === 'work' ? 'Session finished.' : (s?.next || 'Finished');
   return s.next ? `then ${s.next}` : (s.title || '');
+}
+
+/* ---------- TV view ---------- */
+
+// Whether a tap on Work mode's clock may show the time left. Never while TV
+// view is on: the screen is being mirrored to a TV that other people can see.
+export const revealAllowed = (mode, s, onTv) => mode === 'work' && !!s && !onTv;
+
+// Shown for a few seconds when TV view opens; a mirrored TV shows it too.
+export const TV_ENTERED = 'TV view. Tap anywhere to go back.';
+
+// Menu → On a TV: how to mirror this kind of device, and what TimeFall can't do.
+const MIRROR_STEPS = {
+  computer: 'in Chrome, open the browser’s menu and choose Cast, save and share, then Cast, and pick the TV. In Edge, Cast is under More tools.',
+  android: 'swipe down from the top of the screen, choose Cast or Smart View, and pick the TV. Turn the phone on its side to fill the TV.',
+  iphone: 'open Control Center, tap Screen Mirroring and pick the TV. Turn the iPhone on its side to fill the TV.',
+};
+export function tvHint(kind) {
+  return `Mirror this screen to the TV first: ${MIRROR_STEPS[kind] || MIRROR_STEPS.computer} `
+    + 'Then, while a session runs, choose TV view at the top. It shows the picture and what you are doing, large, with no numbers counting down. '
+    + 'TimeFall can’t start the mirroring itself, and the TV shows whatever this screen shows, so keep TimeFall open; the screen stays awake while TV view is on. '
+    + 'In Work mode, the tap that shows the time left is off in TV view.';
 }

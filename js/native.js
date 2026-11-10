@@ -16,7 +16,7 @@ import { mode, session, settings } from './state.js';
 import { plannedCues, reconcileCues, CUE_IDS, phoneCarriesCue } from './cues.js';
 import { $, toast } from './ui.js';
 import { bringIn } from './menu.js';
-import { render } from './screens.js';
+import { render, leaveTv } from './screens.js';
 
 const cap = () => window.Capacitor;
 const has = name => isNative && (cap().PluginHeaders || []).some(h => h.name === name);
@@ -59,6 +59,7 @@ export function initNative() {
   // floating" first; whether the app then came to the front or was stopped
   // arrives a moment later (appStateChange). Until then the reminders stay.
   listen('Floating', 'floatingChanged', ({ active }) => {
+    if (active) leaveTv(); // Android's small window takes over from TV view
     document.body.classList.toggle('is-floating', !!active);
     leavingFloat = !active;
     if (active) { syncBackgroundCues(); return; }

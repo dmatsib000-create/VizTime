@@ -9,7 +9,7 @@ import { mode, session, setSession, settings, persist } from './state.js';
 import { $, toast, announce } from './ui.js';
 import { cueWords, notification } from './words.js';
 import { resetForm } from './setup.js';
-import { render } from './screens.js';
+import { render, inTv } from './screens.js';
 import { frame } from './draw.js';
 import { closeFloat } from './pip.js';
 import { askForCues, vibrate, keepAwake, cueHandedOff } from './native.js';
@@ -147,7 +147,9 @@ document.addEventListener('pointerdown', unlockAudio, { passive: true });
 // A change that arrives while a request is still pending runs again after it,
 // so pausing during the request doesn't leave the screen held awake.
 let wakeLock = null, wakeBusy = false, wakeAgain = false;
-const wantWake = () => settings.wake && session && !session.finishedAt && !session.pausedAt && document.visibilityState === 'visible';
+// TV view holds the screen whatever the setting, paused or finished: a mirrored TV goes dark with it.
+const wantWake = () => session && document.visibilityState === 'visible'
+  && (inTv() || (settings.wake && !session.finishedAt && !session.pausedAt));
 export async function syncWake() {
   // The shells hold the screen themselves; the web lock below isn't theirs.
   if (isNative) { keepAwake(wantWake()); return; }

@@ -489,6 +489,12 @@ The last section, **Your data**, holds the code that carries presets, notes and 
 
 **Description.** The Android app's floating window is the page itself, shrunk by the system to about 240 × 300px (`FloatingPlugin.java`). The shell sets `is-floating` on the body while that lasts, and the stylesheet keeps only what fits: the title on one line, the next line, the picture, and in Work mode the schedule's two rows; the bar, controls, figures, dots, next card, notes and toast are hidden. It can't be tapped except to return to the app, so nothing in it needs a tap area. Check it at 240 × 300 in every mode, as with the desktop floating window.
 
+### TV view — `body.is-tv`
+
+**Description.** The page laid out for a screen across the room, while the person mirrors their device to a TV. A text button, **TV view**, sits beside Float and is shown only while a session runs. The body takes `is-tv` and the stylesheet keeps the picture and the words about what is happening, enlarged with `clamp()` on viewport width: title and next line in Full mode, the desk clock and schedule in Work mode, the picture alone in Simple mode, and the label and title of the finish screen. The bar, controls, time-left figures, dots, next card, notes, ribbon and Work mode's reveal are hidden. Wider than tall, the picture sits beside the words; otherwise the words sit above it.
+
+**Rules.** Nothing in TV view counts down in numbers. Work mode's private reveal is refused in script as well as hidden (`revealAllowed` in words.js). Any tap, or Escape, leaves, and the tap does nothing else. A toast says so when it opens. It stays through the finish and ends with the session. On a computer it asks the browser for full screen; the phone apps already fill the screen. Check it in every mode, light and dark, upright and on its side, and at 1920 × 1080.
+
 ### Toast — `.toast`
 
 **Description.** A short inverted ink bar at the bottom: "Session stopped", "Preset removed", "Preset saved", with Undo where it applies. Hides after 10 seconds, or when a new session starts. It never hides while the pointer or keyboard focus is on it; leaving it starts a fresh 10 seconds.
@@ -554,6 +560,7 @@ The ruler is the face for counting minutes: length is judged more accurately tha
 | Live announcements | one `aria-live="polite"` region | Speaks the warning, the finish, keyboard mode switches and the toast; never each minute. Work mode says "Session finished" only. |
 | Mode-specific content | `.only-full`, `.only-work`, `.only-simple`, `.not-simple` | Swap words per mode inside one element rather than duplicating elements. |
 | Floating window | `body.pip`, `.pip-*` | Sized in `vmin`. Drops controls, then figures, then the next line before the face shrinks. Wider than 5:4, the picture sits beside the words, except the ruler, which stays stacked. |
+| Showing it on a TV | `body.is-tv`, `tvHint` in words.js | The device mirrors; TimeFall only lays the page out. The same elements as the running and finish screens, so the TV can never disagree with the phone. Menu → On a TV says how to mirror and what TimeFall can't do. |
 | Reminders on a phone | `cues.js` + `native.js` | While the app is in front the page plays its cues; when it goes to the background the cues still to come are scheduled from the session's timestamps, and cancelled on return. Never late; Work mode schedules only "Session finished." (tested). |
 | Carrying data | `packCode`, `unpackCode`, `importData` in store.js | One code for settings, presets, notes and lengths. Presets add, newer notes win, device-bound settings (reminders, vibration, Silent-mode tones) stay. |
 

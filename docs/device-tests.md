@@ -47,6 +47,16 @@ Repeat with Silent mode on. Then repeat once more, but after unlocking tap **Res
 
 **10. Does the screen stay on?** Set Auto-Lock to 1 minute. In the check app, tap **Hold screen awake** and leave the phone untouched for 10 minutes. Do it with Low Power Mode off, then on. A "released" line in the log means it let go.
 
+## TV
+
+TV view is TimeFall's layout for a mirrored TV. TimeFall can't start the mirroring; the device does.
+
+**11. Does TV view read well from across the room?** Mirror to the TV (computer: Chrome's menu → Cast, save and share → Cast; Android: Cast or Smart View; iPhone: Screen Mirroring). Start a session with a title and a next activity, then choose **TV view**. Try Full, Work and Simple mode, and each picture. Note anything too small to read from a chair, especially the Planner's and Ruler's labels from a computer, and whether a phone on its side fills the TV.
+
+**12. Does Work mode stay discreet on the TV?** In Work mode with TV view on, tap the clock. The time left must not appear on the phone or the TV; the tap should only go back to the usual screen. Let a session finish in TV view: the TV should say "Session finished." and nothing about time.
+
+**13. Does the TV stay lit?** Leave TV view on for 15 minutes without touching the device, with **Keep the screen awake** turned off in Menu. Note whether the screen dimmed or locked, and what the TV showed when a notification or a call arrived.
+
 ## Optional
 
 - **Mac Safari:** open the check page and note the `navigator.standalone` line. If it isn't "undefined", hiding notifications by that test would also hide them on a Mac.
@@ -68,3 +78,6 @@ Repeat with Silent mode on. Then repeat once more, but after unlocking tap **Res
 | 8b | 2026-11-02 | iPhone, Safari and Vivaldi | Silent mode was the reason no tone played anywhere: with it off, **Try it** plays. The playback option itself not tried yet. |
 | 9 | | | |
 | 10 | | | |
+| 11 | | | |
+| 12 | | | |
+| 13 | | | |
