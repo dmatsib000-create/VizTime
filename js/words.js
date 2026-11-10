@@ -143,8 +143,15 @@ export function videoLine(mode, s) {
 // view is on: the screen is being mirrored to a TV that other people can see.
 export const revealAllowed = (mode, s, onTv) => mode === 'work' && !!s && !onTv;
 
-// Shown for a few seconds when TV view opens; a mirrored TV shows it too.
-export const TV_ENTERED = 'TV view. Tap anywhere to go back.';
+// Shown when TV view opens, until the person goes back or ten seconds pass; a
+// mirrored TV shows it too. It names where the device's own mirroring is,
+// because TimeFall has no button that can start it.
+const MIRROR_WHERE = {
+  computer: 'open the browser’s menu and choose Cast',
+  android: 'swipe down from the top and choose Cast or Smart View',
+  iphone: 'open Control Center and tap Screen Mirroring',
+};
+export const tvEntered = kind => `TV view. To put it on a TV, ${MIRROR_WHERE[kind] || MIRROR_WHERE.computer}. Tap anywhere to go back.`;
 
 // Menu → On a TV: how to mirror this kind of device, and what TimeFall can't do.
 const MIRROR_STEPS = {

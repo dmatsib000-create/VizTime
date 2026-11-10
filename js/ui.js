@@ -27,6 +27,11 @@ export function toast(text, undo) {
   announce(undo ? `${text}. Undo available.` : text);
   armToast();
 }
+// For a toast whose moment has passed, such as TV view's once the person has gone back.
+export function hideToast() {
+  clearTimeout(toastTimer);
+  $('toast').hidden = true;
+}
 // Leaving it starts a fresh 10 seconds.
 for (const type of ['mouseleave', 'focusout']) $('toast').addEventListener(type, () => { if (!$('toast').hidden) armToast(); });
 

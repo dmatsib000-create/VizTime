@@ -602,3 +602,5 @@ body.is-tv .sched-when { font-size: clamp(12px, 1.3vw, 20px); }
 body.is-tv .sched-what { font-size: clamp(19px, 2.6vw, 40px); }
 body.is-tv #landing .label { font-size: clamp(12px, 1.6vw, 24px); }
 body.is-tv .landing-title { font-size: clamp(36px, 7vw, 110px); }
+/* Its banner carries a sentence, so it takes the width a phone has rather than a tall column. */
+body.is-tv .toast { width: max-content; max-width: calc(100vw - 2 * var(--s4)); padding: var(--s2) var(--s4); line-height: 1.4; }

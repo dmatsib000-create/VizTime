@@ -199,7 +199,9 @@ test('TV view: the Menu says how to mirror, and what TimeFall cannot do', () => 
   const kinds = ['computer', 'android', 'iphone'];
   assert.equal(new Set(kinds.map(W.tvHint)).size, 3);
   assert.equal(W.tvHint('other'), W.tvHint('computer'));
-  for (const text of [...kinds.map(W.tvHint), W.TV_ENTERED]) {
+  assert.equal(new Set(kinds.map(W.tvEntered)).size, 3);
+  assert.match(W.tvEntered('iphone'), /Control Center.*Screen Mirroring.*Tap anywhere to go back\.$/);
+  for (const text of [...kinds.map(W.tvHint), ...kinds.map(W.tvEntered)]) {
     assert.doesNotMatch(text, /\d|!/, `"${text}" holds a number or an exclamation mark`);
     assert.doesNotMatch(text, /\b(timer|countdown|time's up|wrapping up)\b/i);
   }

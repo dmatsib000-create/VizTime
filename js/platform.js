@@ -11,3 +11,6 @@ export const isIphoneWeb = !isNative && typeof navigator !== 'undefined' && 'sta
 // a touch laptop is not a phone.
 export const isPhoneWeb = !isNative && typeof navigator !== 'undefined'
   && (/iPhone|iPad|Android/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1));
+// Which screen-mirroring steps fit this device (words.js has the wording).
+export const mirrorKind = platform === 'ios' || isIphoneWeb ? 'iphone'
+  : platform === 'android' || (typeof navigator !== 'undefined' && /Android/.test(navigator.userAgent)) ? 'android' : 'computer';
