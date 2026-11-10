@@ -3,9 +3,9 @@
 import * as E from './engine.js';
 import { getNote, setNote } from './store.js';
 import { mode, session, settings, saveSettings } from './state.js';
-import { isNative } from './platform.js';
-import { $, body, fmtLeft, setLive, onActivate, toast } from './ui.js';
-import { REVEAL_MS, faceLabel as pictureLabel, sessionTitle, runFigures, scheduleTimes, landingText, startLabel, revealAllowed, TV_ENTERED } from './words.js';
+import { isNative, mirrorKind } from './platform.js';
+import { $, body, fmtLeft, setLive, onActivate, toast, hideToast } from './ui.js';
+import { REVEAL_MS, faceLabel as pictureLabel, sessionTitle, runFigures, scheduleTimes, landingText, startLabel, revealAllowed, tvEntered } from './words.js';
 import { renderSetup, labelChips, showRibbon, showError } from './setup.js';
 import { startSession, endSession, suggestedMinutes, syncWake } from './session.js';
 import { tick, faceName, faceSetting, requestPaint } from './draw.js';
@@ -248,7 +248,7 @@ function enterTv() {
   body.classList.add('is-tv');
   // The apps already fill the screen, and an iPhone has no full screen for pages.
   if (!isNative) document.documentElement.requestFullscreen?.().catch(() => {});
-  toast(TV_ENTERED);
+  toast(tvEntered(mirrorKind));
   render();
   focusScreen('run');
 }
@@ -256,6 +256,7 @@ function enterTv() {
 export function leaveTv() {
   if (!inTv()) return;
   body.classList.remove('is-tv');
+  hideToast(); // its "tap anywhere" no longer applies
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   render();
   focusScreen(shownScreen);
