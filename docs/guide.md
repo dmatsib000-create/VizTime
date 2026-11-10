@@ -164,6 +164,22 @@ In the iPhone app, **Float** shows the picture as a small floating video that st
 
 On an iPhone, the web page's **Float** works only when TimeFall is open in Safari, not from the Home Screen, because Apple doesn't support it in home-screen apps yet. In Safari it shows the same small floating video. You can't tap it, and the iPhone may freeze it while you're in another app. Treat it as an experiment.
 
+## Showing it on a TV
+
+TimeFall can't send itself to a TV on its own. Your phone or computer can, by mirroring its screen, and TimeFall has a **TV view** made for that.
+
+1. Mirror your screen to the TV first.
+   - **iPhone:** open Control Center, tap **Screen Mirroring** and pick the TV (an Apple TV, or a TV that takes AirPlay).
+   - **Android:** swipe down from the top of the screen, choose **Cast** or **Smart View**, and pick the TV.
+   - **Computer:** in Chrome, open the browser's menu and choose **Cast, save and share**, then **Cast**, and pick the TV. In Edge, Cast is under **More tools**.
+2. Start a session in TimeFall, then tap **TV view** at the top.
+3. On a phone, turn it on its side so the picture fills the TV.
+4. Tap anywhere to go back to the usual screen.
+
+TV view shows the picture and what you are doing, in large type. It never shows numbers counting down. In Work mode it shows the clock, the schedule and the picture, and the tap that shows the time left is switched off, because everyone who can see the TV would see it too.
+
+Two things to know. The TV shows whatever your screen shows, so keep TimeFall open; if you switch to another app, the TV shows that instead. And the screen stays awake while TV view is on, so the phone uses more battery; plugging it in helps.
+
 ## What works where
 
 | | TimeFall app on iPhone | TimeFall app on Android | iPhone web page (added to home screen) | Computer (Chrome, Edge or Vivaldi) |
@@ -174,6 +190,7 @@ On an iPhone, the web page's **Float** works only when TimeFall is open in Safar
 | Reminders when the phone is locked or you're in another app | Yes, a soft tone and a line on the Lock Screen (Silent mode and Focus apply to them as to any app) | Yes | No | Yes, if you turn on **System notification** in Menu |
 | Keeping the screen awake | Yes (on by default during a session) | Yes | Yes, on iOS 18.4 and later | Yes |
 | Vibration | Yes, if you turn it on | Yes, if you turn it on | No | No |
+| TV view (with your device's own screen mirroring) | Yes | Yes | Yes | Yes |
 | Floating view | Yes, the picture as a small video (can't be tapped, except to come back) | Yes | No (only in a Safari tab, experimental, can't be tapped) | Yes |
 
 **Why the web page can do less on a phone:** a phone pauses web pages as soon as they're off screen or the phone locks, so the page can't play a sound then. That's a rule of the phone that a web page can't get around, and it is why the TimeFall app exists. If you use the web page, leave it open on screen; the screen stays awake by default while a session runs. The picture and the warming light are designed to do the whole job without sound.

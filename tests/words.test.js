@@ -3,6 +3,7 @@
 // says is "Session finished."
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import * as E from '../js/engine.js';
 import * as W from '../js/words.js';
 
@@ -112,4 +113,35 @@ test('time left is worded in plain minutes and hours', () => {
   assert.equal(W.fmtLeft(61_000), '2 min');
   assert.equal(W.fmtLeft(60 * MIN), '1 h');
   assert.equal(W.fmtLeft(90 * MIN), '1 h 30 min');
+});
+
+test('TV view: the private tap never shows the time left on a mirrored screen', () => {
+  for (const { s } of workCases()) {
+    assert.equal(W.revealAllowed('work', s, true), false);
+    assert.equal(W.revealAllowed('work', s, false), true);
+    assert.equal(W.faceLabel('work', s, T0, true), 'Clock');
+  }
+  assert.equal(W.revealAllowed('work', null, false), false);
+  assert.equal(W.revealAllowed('full', E.createSession({ totalMs: MIN }, T0), false), false);
+});
+
+test('TV view: the stylesheet hides the reveal, the time-left figures and the controls', () => {
+  const css = readFileSync(new URL('../styles.css', import.meta.url), 'utf8');
+  for (const part of ['.reveal', '.figures', '.controls', '.bar', '.next-card']) {
+    assert.ok(css.includes(`body.is-tv ${part}`), `styles.css does not hide ${part} in TV view`);
+  }
+});
+
+test('TV view: the Menu says how to mirror, and what TimeFall cannot do', () => {
+  const kinds = ['computer', 'android', 'iphone'];
+  assert.equal(new Set(kinds.map(W.tvHint)).size, 3);
+  assert.equal(W.tvHint('other'), W.tvHint('computer'));
+  for (const text of [...kinds.map(W.tvHint), W.TV_ENTERED]) {
+    assert.doesNotMatch(text, /\d|!/, `"${text}" holds a number or an exclamation mark`);
+    assert.doesNotMatch(text, /\b(timer|countdown|time's up|wrapping up)\b/i);
+  }
+  for (const kind of kinds) {
+    assert.match(W.tvHint(kind), /can’t start the mirroring itself/);
+    assert.match(W.tvHint(kind), /keep TimeFall open/);
+  }
 });

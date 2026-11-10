@@ -22,6 +22,7 @@ The running record of turning VizTime into the TimeFall phone apps. Decisions an
 | GitHub secrets for Apple (`APPSTORE_PRIVATE_KEY`, `APPSTORE_KEY_ID`, `APPSTORE_ISSUER_ID`, `APPLE_TEAM_ID`) | Done on 8 November 2026; the first upload used them | |
 | TestFlight group "Friends" with its public link | Done: made by the first hand-off run on 8 November 2026; every later build joins it (build 14 on 9 November) | |
 | TestFlight test information (feedback email, review contact), then the first Beta App Review | Test information typed on 9 November 2026; build 14 was sent to Beta App Review the same day and is waiting for review | Apple, usually a day or two |
+| TV view (the page laid out for a mirrored TV; no casting of its own) | Built on 9 November 2026 (branch `timefall-tv-view`); tests pass; checked in the browser only. Chromecast-style casting was looked at and set aside: US$5 once to Google, native code in both apps, Chromecast devices only. | A real TV: tests 11 to 13 in [device-tests.md](device-tests.md) |
 | Owner's phone checklist | Not started | A TestFlight build |
 
 ## What only the owner can do, in order

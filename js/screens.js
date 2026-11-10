@@ -3,13 +3,14 @@
 import * as E from './engine.js';
 import { getNote, setNote } from './store.js';
 import { mode, session, settings, saveSettings } from './state.js';
-import { $, body, fmtClock, fmtShort, fmtLeft } from './ui.js';
-import { faceLabel as pictureLabel } from './words.js';
+import { isNative } from './platform.js';
+import { $, body, fmtClock, fmtShort, fmtLeft, toast } from './ui.js';
+import { faceLabel as pictureLabel, revealAllowed, TV_ENTERED } from './words.js';
 import { renderSetup, labelChips, showRibbon, showError } from './setup.js';
 import { startSession, endSession, suggestedMinutes, syncWake } from './session.js';
 import { tick, faceName, faceSetting, requestPaint } from './draw.js';
 import { canFloatWindow, canFloatVideo } from './float.js';
-import { renderFloatText } from './pip.js';
+import { renderFloatText, closeFloat } from './pip.js';
 import { canFloatNative, syncBackgroundCues, setAutoFloat } from './native.js';
 
 const { MIN, MAX_MINUTES } = E;
@@ -32,6 +33,8 @@ export function render() {
   if (session && !session.finishedAt) renderRun();
   if (session && session.finishedAt) renderLanding();
   $('float-btn').hidden = !(session && !session.finishedAt && (canFloatNative() || canFloatWindow() || canFloatVideo()));
+  $('tv-btn').hidden = screen !== 'run';
+  if (screen === 'setup' && inTv()) return leaveTv(); // it ends with the session, then draws again
   requestPaint();
   tick();
   syncWake();
@@ -206,13 +209,13 @@ for (const d of document.querySelectorAll('[data-face]')) {
 }
 
 // What the picture says to a screen reader (words.js; the floating window uses it too).
-export const faceLabel = now => pictureLabel(mode, session, now);
+export const faceLabel = now => pictureLabel(mode, session, now, inTv());
 
 // Tapping the clock (or Enter or Space on it) privately shows the time left
 // for a few seconds.
 let revealTimer;
 function reveal() {
-  if (mode !== 'work' || !session) return;
+  if (!revealAllowed(mode, session, inTv())) return;
   $('reveal').textContent = '';
   setTimeout(() => { $('reveal').textContent = fmtLeft(E.remaining(session)); }, 50);
   $('reveal').classList.add('is-on');
@@ -225,3 +228,45 @@ $('face').addEventListener('keydown', e => {
   e.preventDefault();
   reveal();
 });
+
+/* ---------- TV view ---------- */
+
+// The person mirrors this device to a TV with the device's own controls;
+// TimeFall can't start that. TV view is this page laid out for the big screen
+// (body.is-tv in the stylesheet): the picture and what is happening, nothing
+// that counts down in numbers, and no private reveal. It stays through the
+// finish, so the TV shows the handoff, and ends with the session.
+export const inTv = () => body.classList.contains('is-tv');
+
+function enterTv() {
+  if (!session || session.finishedAt) return;
+  $('reveal').classList.remove('is-on');
+  // The floating window has its own figures and its own reveal; a mirrored TV would show them.
+  closeFloat();
+  body.classList.add('is-tv');
+  // The apps already fill the screen, and an iPhone has no full screen for pages.
+  if (!isNative) document.documentElement.requestFullscreen?.().catch(() => {});
+  toast(TV_ENTERED);
+  render();
+  focusScreen('run');
+}
+
+export function leaveTv() {
+  if (!inTv()) return;
+  body.classList.remove('is-tv');
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  render();
+  focusScreen(shownScreen);
+}
+
+$('tv-btn').addEventListener('click', enterTv);
+// Any tap leaves, and does nothing else: the tap must not reach the clock or a button.
+document.addEventListener('click', e => {
+  if (!inTv()) return;
+  e.preventDefault();
+  e.stopPropagation();
+  leaveTv();
+}, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') leaveTv(); });
+// Escape in a browser's full screen arrives as this, not as a key.
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) leaveTv(); });

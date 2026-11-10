@@ -16,6 +16,7 @@ import { mode, session, settings } from './state.js';
 import { plannedCues, CUE_IDS, phoneCarriesCues } from './cues.js';
 import { $, toast } from './ui.js';
 import { bringIn } from './menu.js';
+import { leaveTv } from './screens.js';
 
 const cap = () => window.Capacitor;
 const call = (plugin, method, options = {}) => (isNative ? cap().nativePromise(plugin, method, options) : Promise.resolve(undefined));
@@ -43,6 +44,7 @@ export async function initNative() {
   // before the page could schedule anything, so the reminders are set while
   // it floats, and the page plays no tone of its own meanwhile (session.js).
   listen('Floating', 'floatingChanged', ({ active }) => {
+    if (active) leaveTv(); // Android's small window takes over from TV view
     document.body.classList.toggle('is-floating', !!active);
     syncBackgroundCues(active || document.hidden);
   });
