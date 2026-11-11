@@ -82,6 +82,7 @@ export function faceModel(now) {
     title: sessionTitle(mode, s), next: s.next,
     // The clock hands are Work mode's disguise; in Full they step back behind the time left.
     hands: mode === 'work' ? 'ink' : 'soft', zoom, fmtClock: fmtShort,
+    tv: inTv(),
   };
 }
 

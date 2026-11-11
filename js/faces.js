@@ -334,7 +334,8 @@ function drawRuler(ctx, w, h, m, p) {
   const labelSize = small ? 0 : L >= 300 ? 13 : 11;
   // A sixth of its length, so it has the weight to be seen from the corner of
   // the eye; capped so a wide desktop strip stays a strip, not a block.
-  const H = Math.round(Math.min(h * 0.28, 96, Math.max(small ? 16 : 22, L / 6)));
+  // TV view gives the strip the whole width and wants it seen across a room, so there it may be a block.
+  const H = Math.round(Math.min(h * (m.tv ? 0.55 : 0.28), m.tv ? Infinity : 96, Math.max(small ? 16 : 22, L / 6)));
   const above = small ? 9 : labelSize + 13, below = small ? 12 : 16;
   const y0 = Math.round((h - (above + H + below)) / 2 + above) + 0.5, y1 = y0 + H;
 
