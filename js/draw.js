@@ -2,13 +2,13 @@
 // draws the picture, the warm light and the zoom.
 
 import * as E from './engine.js';
-import { palette, drawFace, paintWarmth, redrawGap, SERIF, FACE_SETTING, faceFor } from './faces.js';
+import { palette, drawFace, paintWarmth, redrawGap, tvScale, SERIF, FACE_SETTING, faceFor } from './faces.js';
 import { mode, session, settings, persist } from './state.js';
 import { $, body, dateFmt, fmtClock, fmtShort } from './ui.js';
 import { pageTitle, sessionTitle, videoLine } from './words.js';
 import { labelChips } from './setup.js';
 import { playCue, onFinished, syncWake } from './session.js';
-import { renderRun, labelMain } from './screens.js';
+import { renderRun, labelMain, inTv } from './screens.js';
 import { floatDoc, renderFloatText } from './pip.js';
 
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -58,6 +58,8 @@ function updateTitle(now) {
 
 let pal = palette();
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { pal = palette(); });
+// TV view deepens the fill (styles.css); read the colours again when it opens or closes.
+export function refreshPalette() { pal = palette(); requestPaint(); }
 
 let warmth = 0, zoom = 0, lastFrame = 0, lastStep = performance.now();
 
@@ -80,6 +82,7 @@ export function faceModel(now) {
     title: sessionTitle(mode, s), next: s.next,
     // The clock hands are Work mode's disguise; in Full they step back behind the time left.
     hands: mode === 'work' ? 'ink' : 'soft', zoom, fmtClock: fmtShort,
+    tv: inTv(),
   };
 }
 
@@ -87,16 +90,17 @@ export function faceModel(now) {
 export const faceSetting = () => FACE_SETTING[mode];
 export const faceName = () => faceFor(mode, settings);
 
-export function paint(canvas, name, m) {
+// `scale` draws the picture smaller and enlarges it, lines and labels with it (TV view).
+export function paint(canvas, name, m, scale = 1) {
   const r = canvas.getBoundingClientRect();
   if (!r.width || !r.height) return;
   const dpr = Math.min(3, canvas.ownerDocument.defaultView.devicePixelRatio || 1);
   const w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
   if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
   const ctx = canvas.getContext('2d');
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, r.width, r.height);
-  drawFace(ctx, r.width, r.height, name, m, pal);
+  ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+  ctx.clearRect(0, 0, r.width / scale, r.height / scale);
+  drawFace(ctx, r.width / scale, r.height / scale, name, m, pal);
 }
 
 // Moves the warm light and the planner zoom toward their targets. Both the main
@@ -154,7 +158,7 @@ function drawMain() {
   lastPaint = Date.now();
   step();
   if (!session || session.finishedAt || document.hidden || body.dataset.screen !== 'run') return;
-  paint($('face'), faceName(), faceModel(Date.now()));
+  paint($('face'), faceName(), faceModel(Date.now()), inTv() ? tvScale(innerWidth, innerHeight) : 1);
 }
 
 // Coming back to the page: bring everything up to date at once, and restart

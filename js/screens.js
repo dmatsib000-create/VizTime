@@ -8,7 +8,7 @@ import { $, body, fmtLeft, setLive, onActivate, toast, hideToast } from './ui.js
 import { REVEAL_MS, faceLabel as pictureLabel, sessionTitle, runFigures, scheduleTimes, landingText, startLabel, revealAllowed, tvEntered } from './words.js';
 import { renderSetup, labelChips, showRibbon, showError } from './setup.js';
 import { startSession, endSession, suggestedMinutes, syncWake } from './session.js';
-import { tick, faceName, faceSetting, requestPaint } from './draw.js';
+import { tick, faceName, faceSetting, requestPaint, refreshPalette } from './draw.js';
 import { FACES } from './faces.js';
 import { canFloatWindow, canFloatVideo } from './float.js';
 import { renderFloatText, closeFloat } from './pip.js';
@@ -246,6 +246,7 @@ function enterTv() {
   // The floating window has its own figures and its own reveal; a mirrored TV would show them.
   closeFloat();
   body.classList.add('is-tv');
+  refreshPalette();
   // The apps already fill the screen, and an iPhone has no full screen for pages.
   if (!isNative) document.documentElement.requestFullscreen?.().catch(() => {});
   toast(tvEntered(mirrorKind));
@@ -256,6 +257,7 @@ function enterTv() {
 export function leaveTv() {
   if (!inTv()) return;
   body.classList.remove('is-tv');
+  refreshPalette();
   hideToast(); // its "tap anywhere" no longer applies
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   render();
